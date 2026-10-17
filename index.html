@@ -217,6 +217,9 @@ h3{font-size:16px;margin:12px 0 8px}
 .upres.ok{color:#4ade80;animation:pop .3s}
 .upres.bad{color:#f87171;animation:cshake .5s}
 #nav button{font-size:10px}
+.wing{transform-box:fill-box;transform-origin:100% 100%;animation:flap 1.6s ease-in-out infinite alternate}
+@keyframes flap{to{transform:rotate(-7deg)}}
+.legset{background:linear-gradient(90deg,rgba(245,197,66,.25),rgba(56,189,248,.2));border:1px solid #f5c542}
 
 /* Skórki wydarzeń */
 #app.skin-pumpkin{--acc:#ff8c1a}
@@ -287,6 +290,10 @@ h3{font-size:16px;margin:12px 0 8px}
   <filter id="gl4" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   <radialGradient id="auraG"><stop offset="0" stop-color="#ffd27a" stop-opacity=".7"/><stop offset=".6" stop-color="#ff7a1a" stop-opacity=".3"/><stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/></radialGradient>
   <linearGradient id="flameG" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff3d00"/><stop offset=".55" stop-color="#ff9100"/><stop offset="1" stop-color="#ffe082"/></linearGradient>
+  <linearGradient id="goldG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".45" stop-color="#f5c542"/><stop offset="1" stop-color="#a86b0c"/></linearGradient>
+  <radialGradient id="gemG" cx=".35" cy=".35"><stop offset="0" stop-color="#ecfeff"/><stop offset=".45" stop-color="#38bdf8"/><stop offset="1" stop-color="#0c4a8a"/></radialGradient>
+  <linearGradient id="bladeG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff7d6"/><stop offset=".5" stop-color="#ffffff"/><stop offset="1" stop-color="#ffd76a"/></linearGradient>
+  <linearGradient id="cosmicG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2a8a"/><stop offset="1" stop-color="#0b0f3a"/></linearGradient>
   <linearGradient id="flame9G" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#7c3aed"/><stop offset=".5" stop-color="#38bdf8"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
 </defs></svg>
 <div id="modal" class="hidden"><div class="mbox" id="modalBox"></div></div>
@@ -298,7 +305,7 @@ h3{font-size:16px;margin:12px 0 8px}
    Zmień GAME_VERSION przy każdej aktualizacji na GitHubie –
    gracze zobaczą pasek „Aktualizuj”, a postęp zostanie zachowany.
    ========================================================= */
-const GAME_VERSION = '1.1.0';
+const GAME_VERSION = '1.2.0';
 const SAVE_KEY = 'monsterTap_save_v1';
 
 const $ = id => document.getElementById(id);
@@ -575,6 +582,7 @@ function bonusAcc() {
   for (const t of TALENTS) { const l = S.talents[t.id] || 0; if (l) t.fx.forEach(f => add(f[0], f[1] * l)); }
   for (const ar of ARTIFACTS) { const l = S.artifacts[ar.id] || 0; if (l) add(ar.t, ar.v * l); }
   for (const sl of SLOT_ORDER) { const it = equippedItem(sl); if (it) add(SLOTS[sl].t, itemValue(it)); }
+  if (legendarySet(equippedAll())) { add('dmg', .50); add('coin', .25); }
   for (let w = 0; w < WORLDS.length; w++) if (worldComplete(w)) { add('dmg', .10); add('coin', .10); }
   if (Object.keys(S.artifacts).length >= ARTIFACTS.length) add('dmg', .25);
   if (S.skins.pumpkin) add('coin', .05);
@@ -963,12 +971,31 @@ function upgradeCost(it) {
 }
 
 /* --- Rysowanie bohatera (SVG z warstw: buty, zbroja, amulet, głowa, hełm, broń) --- */
+const GOLD = 'url(#goldG)', GOLD_D = '#7a4e0c', GEM = 'url(#gemG)';
+const isLeg = it => !!it && it.r === 4;
+const legendarySet = eq => SLOT_ORDER.every(k => isLeg(eq[k]));
+const legCount = eq => SLOT_ORDER.filter(k => isLeg(eq[k])).length;
+function flamePlume(x, y, n, sc) {   // płonąca grzywa
+  let s = '';
+  for (let i = 0; i < n; i++) {
+    const a = -35 + i * (70 / (n - 1 || 1)), k = (sc * (1 - Math.abs(a) / 120)).toFixed(2);
+    s += `<g transform="translate(${x} ${y}) rotate(${a.toFixed(0)}) scale(${k})"><path class="flm" style="animation-delay:${(i * .09).toFixed(2)}s" d="M0 0 C-6 -8 -5 -16 0 -26 C5 -16 6 -8 0 0Z" fill="url(#flameG)"/></g>`;
+  }
+  return s;
+}
+function wingSVG() {
+  const w = `<g class="wing"><path d="M44 72 C26 70 8 58 2 34 C10 40 16 42 22 42 C10 34 4 22 6 8 C14 22 24 30 34 34 C26 24 24 14 28 4 C34 22 42 40 48 58Z" fill="${GOLD}" stroke="${GOLD_D}" stroke-width="1.2"/><path d="M40 66 C28 62 16 54 10 44 M42 60 C32 52 22 42 16 26 M44 54 C38 42 34 30 32 16" stroke="${GOLD_D}" stroke-width="1" fill="none"/><circle cx="20" cy="36" r="5" fill="${GEM}" filter="url(#gl2)"/></g>`;
+  return w + `<g transform="translate(120 0) scale(-1 1)">${w}</g>`;
+}
 const glowF = l => l >= 9 ? 'url(#gl4)' : l >= 7 ? 'url(#gl3)' : l >= 5 ? 'url(#gl2)' : l >= 3 ? 'url(#gl1)' : '';
 const fAttr = l => { const f = glowF(l); return f ? ` filter="${f}"` : ''; };
-const WEAPON_TIP = { sword: -57, axe: -50, hammer: -58, spear: -76, staff: -67 };
+const WEAPON_TIP = { legsword: -65, sword: -57, axe: -50, hammer: -58, spear: -76, staff: -67 };
 function weaponSVG(w, fx) {
-  const m = METAL[w.r], c = RARITY[w.r].c; let g;
-  switch (w.b) {
+  const leg = isLeg(w), m = leg ? GOLD : METAL[w.r], c = leg ? '#38bdf8' : RARITY[w.r].c; let g;
+  switch (leg && w.b === 'sword' ? 'legsword' : w.b) {
+    case 'legsword': g = `<rect x="-2.2" y="0" width="4.4" height="12" rx="1.5" fill="#3b1f0a"/><path d="M-2.2 3 L2.2 5 M-2.2 7 L2.2 9" stroke="#f5c542" stroke-width="1"/><circle cx="0" cy="14" r="3" fill="${GEM}" stroke="${GOLD_D}" stroke-width=".8"/>
+      <path d="M-5 -4 L5 -4 L4.5 -54 L0 -65 L-4.5 -54Z" fill="url(#bladeG)" stroke="#f5c542" stroke-width="1.3"/><path d="M0 -6 L0 -54" stroke="#f5c542" stroke-width="1.2"/>
+      <path d="M-16 -1 Q-10 -9 -3 -4 L3 -4 Q10 -9 16 -1 Q9 3 0 1 Q-9 3 -16 -1Z" fill="${GOLD}" stroke="${GOLD_D}" stroke-width="1"/><circle cx="0" cy="-2" r="2.6" fill="${GEM}" filter="url(#gl1)"/>`; break;
     case 'axe': g = `<rect x="-2" y="-52" width="4" height="64" rx="2" fill="#6b4423"/><path d="M2 -50 Q24 -46 20 -26 Q12 -32 2 -32Z" fill="${m}" stroke="${c}" stroke-width="1.2"/><path d="M-2 -48 Q-12 -44 -10 -34 Q-6 -37 -2 -36Z" fill="${m}" stroke="${c}" stroke-width="1"/>`; break;
     case 'hammer': g = `<rect x="-2" y="-46" width="4" height="58" rx="2" fill="#6b4423"/><rect x="-13" y="-58" width="26" height="14" rx="3" fill="${m}" stroke="${c}" stroke-width="1.4"/><rect x="-13" y="-53" width="26" height="3" fill="${c}"/>`; break;
     case 'spear': g = `<rect x="-1.6" y="-62" width="3.2" height="76" rx="1.5" fill="#7a5230"/><path d="M-5 -61 L5 -61 L0 -76Z" fill="${m}" stroke="${c}" stroke-width="1"/><rect x="-4" y="-62" width="8" height="3" fill="${c}"/>`; break;
@@ -977,7 +1004,7 @@ function weaponSVG(w, fx) {
   }
   let back = '', front = '';
   if (fx) {
-    const tip = WEAPON_TIP[w.b] || -57;
+    const tip = WEAPON_TIP[leg && w.b === 'sword' ? 'legsword' : w.b] || -57;
     if (w.l >= 7) {   // płomienie: +7 pomarańczowe, +9 magiczne niebiesko-fioletowe
       const n = w.l >= 9 ? 6 : 3, grad = w.l >= 9 ? 'flame9G' : 'flameG', sc = w.l >= 9 ? 1.35 : .95;
       for (let i = 0; i < n; i++) {
@@ -999,8 +1026,18 @@ function weaponSVG(w, fx) {
 function capPath(m, c) {
   return `<path d="M42 42 Q42 21 60 21 Q78 21 78 42Z" fill="${m}" stroke="${c}" stroke-width="2"/><rect x="40" y="38" width="40" height="5" rx="2.5" fill="${c}"/><rect x="58" y="40" width="4" height="10" rx="1.5" fill="${m}" stroke="${c}" stroke-width=".8"/>`;
 }
-function helmetSVG(h) {
+function helmetSVG(h, fx = true) {
   const m = METAL[h.r], c = RARITY[h.r].c; let g;
+  if (isLeg(h) && ['cap', 'horned', 'crown'].includes(h.b)) {   // legendarny zamknięty hełm z płonącą grzywą
+    g = (fx ? flamePlume(60, 22, 7, 1.25) : '') +
+      (h.b === 'horned' ? `<path d="M44 34 Q28 30 30 12 Q36 26 47 26Z" fill="${GOLD}" stroke="${GOLD_D}"/><path d="M76 34 Q92 30 90 12 Q84 26 73 26Z" fill="${GOLD}" stroke="${GOLD_D}"/>` : '') +
+      `<path d="M41 46 Q40 19 60 17 Q80 19 79 46 L76 58 Q60 67 44 58Z" fill="${GOLD}" stroke="${GOLD_D}" stroke-width="1.5"/>
+      <path d="M60 18 L60 36" stroke="#fff3b0" stroke-width="2"/><path d="M44 50 Q52 54 52 62 M76 50 Q68 54 68 62" stroke="${GOLD_D}" stroke-width="1.2" fill="none"/>
+      <path d="M47 42 H73 M60 42 V55" stroke="#ffb020" stroke-width="3.6" stroke-linecap="round" filter="url(#gl2)"/>
+      <circle cx="60" cy="29" r="3.2" fill="${GEM}" stroke="${GOLD_D}" stroke-width=".8" filter="url(#gl1)"/>` +
+      (h.b === 'crown' ? `<path d="M46 22 L49 12 L54 19 L60 9 L66 19 L71 12 L74 22Z" fill="${GOLD}" stroke="${GOLD_D}"/>` : '');
+    return `<g${fAttr(h.l)}>${g}</g>`;
+  }
   switch (h.b) {
     case 'horned': g = `<path d="M45 33 Q31 24 33 10 Q39 22 49 28Z" fill="#f3ead2" stroke="#b9a77a"/><path d="M75 33 Q89 24 87 10 Q81 22 71 28Z" fill="#f3ead2" stroke="#b9a77a"/>` + capPath(m, c); break;
     case 'crown': g = `<path d="M42 38 L45 19 L52 29 L60 14 L68 29 L75 19 L78 38Z" fill="${c}" stroke="#fff" stroke-opacity=".4"/><rect x="42" y="34" width="36" height="6" rx="2" fill="${m}"/><circle cx="60" cy="27" r="2.5" fill="#fff"/>`; break;
@@ -1011,40 +1048,62 @@ function helmetSVG(h) {
   return `<g${fAttr(h.l)}>${g}</g>`;
 }
 function torsoSVG(a) {
-  if (!a) return `<path d="M42 64 Q60 58 78 64 L80 108 Q60 112 40 108Z" fill="#7c5a34"/><rect x="40" y="96" width="40" height="6" fill="#4a3520"/>`;
+  if (!a) return `<path d="M42 64 Q60 58 78 64 L82 114 Q60 118 38 114Z" fill="#5fa05a" stroke="#2f5e2c" stroke-width="1"/>
+    <path d="M52 61 L60 74 L68 61" fill="#f1c27d" stroke="#2f5e2c" stroke-width="1"/><path d="M51 61 L60 76 L69 61" fill="none" stroke="#c9a24a" stroke-width="1.6"/>
+    <path d="M60 76 L60 96" stroke="#2f5e2c" stroke-width="1"/><path d="M39 110 Q60 115 81 110" stroke="#c9a24a" stroke-width="1.6" fill="none" stroke-dasharray="2 1.5"/>
+    <path d="M44 72 Q50 80 46 96" stroke="#4c8a48" stroke-width="2" fill="none" opacity=".7"/>
+    <rect x="39" y="96" width="42" height="6" rx="1.5" fill="#5b3a1e"/><rect x="56" y="95" width="8" height="8" rx="1.5" fill="none" stroke="#d4a64a" stroke-width="1.6"/>`;
   const m = METAL[a.r], c = RARITY[a.r].c;
+  if (isLeg(a)) {
+    const pd = `<path d="M30 71 Q31 58 45 60 L47 73 Q38 77 30 71Z" fill="${GOLD}" stroke="${GOLD_D}" stroke-width="1.2"/><path d="M33 63 L25 52 L38 59Z M39 60 L36 47 L44 58Z" fill="${GOLD}" stroke="${GOLD_D}"/><circle cx="39" cy="67" r="2.6" fill="${GEM}"/>`;
+    const rays = [0, 45, 90, 135, 180, 225, 270, 315].map(d => `<line x1="0" y1="-7" x2="0" y2="-12" transform="translate(60 84) rotate(${d})"/>`).join('');
+    const body = a.b === 'robe'
+      ? `<path d="M40 64 Q60 56 80 64 L86 132 Q60 137 34 132Z" fill="url(#cosmicG)" stroke="${GOLD_D}" stroke-width="1.5"/><path d="M40 64 L36 132 M80 64 L84 132 M35 128 Q60 134 85 128" stroke="#f5c542" stroke-width="2" fill="none"/>
+        <circle cx="48" cy="110" r=".9" fill="#fff"/><circle cx="70" cy="118" r="1.1" fill="#fff"/><circle cx="55" cy="122" r=".8" fill="#fff"/><circle cx="74" cy="100" r=".8" fill="#fff"/><circle cx="46" cy="96" r="1" fill="#fff"/>`
+      : `<path d="M40 64 Q60 56 80 64 L82 108 Q60 114 38 108Z" fill="${GOLD}" stroke="${GOLD_D}" stroke-width="1.5"/><path d="M46 70 Q60 79 74 70 M47 96 Q60 103 73 96" stroke="${GOLD_D}" stroke-width="1.4" fill="none"/>`;
+    return `<g${fAttr(Math.max(a.l, 3))}>${body}<g stroke="#fff3b0" stroke-width="1.3">${rays}</g><circle cx="60" cy="84" r="5.5" fill="${GEM}" stroke="${GOLD_D}" stroke-width="1" filter="url(#gl2)"/>
+      <rect x="39" y="100" width="42" height="6" rx="2" fill="${GOLD_D}"/><circle cx="60" cy="103" r="2.4" fill="${GEM}"/>${pd}<g transform="translate(120 0) scale(-1 1)">${pd}</g></g>`;
+  }
   if (a.b === 'robe') return `<g${fAttr(a.l)}><path d="M42 64 Q60 58 78 64 L84 130 Q60 134 36 130Z" fill="${c}" stroke="#000" stroke-opacity=".3"/><path d="M60 62 L60 130" stroke="#facc15" stroke-width="2"/><rect x="40" y="94" width="40" height="5" fill="#facc15"/></g>`;
   return `<g${fAttr(a.l)}><path d="M42 64 Q60 58 78 64 L80 108 Q60 112 40 108Z" fill="${m}" stroke="${c}" stroke-width="2"/><path d="M48 72 Q60 80 72 72 M50 84 Q60 90 70 84" stroke="${c}" stroke-width="1.6" fill="none"/><rect x="40" y="96" width="40" height="6" fill="${c}"/>${a.r >= 2 ? `<circle cx="41" cy="67" r="8" fill="${c}" stroke="${m}" stroke-width="1.5"/><circle cx="79" cy="67" r="8" fill="${c}" stroke="${m}" stroke-width="1.5"/>` : ''}</g>`;
 }
-const sleeveColor = a => !a ? '#7c5a34' : a.b === 'robe' ? RARITY[a.r].c : METAL[a.r];
+const sleeveColor = a => !a ? '#5fa05a' : isLeg(a) ? GOLD : a.b === 'robe' ? RARITY[a.r].c : METAL[a.r];
 function bootsSVG(b) {
-  const f = b ? RARITY[b.r].c : '#5b3a1e', t = b ? METAL[b.r] : '#3b2412';
+  const f = isLeg(b) ? GOLD : b ? RARITY[b.r].c : '#4a2c17', t = isLeg(b) ? GOLD_D : b ? METAL[b.r] : '#2a170a';
   return `<g${b ? fAttr(b.l) : ''}><rect x="45" y="131" width="13" height="15" rx="3" fill="${f}" stroke="${t}"/><rect x="40" y="140" width="12" height="6" rx="3" fill="${f}" stroke="${t}"/><rect x="62" y="131" width="13" height="15" rx="3" fill="${f}" stroke="${t}"/><rect x="68" y="140" width="12" height="6" rx="3" fill="${f}" stroke="${t}"/></g>`;
 }
 function amuletSVG(am) {
+  if (isLeg(am)) return `<g${fAttr(Math.max(am.l, 3))}><path d="M50 61 Q60 75 70 61" stroke="#f5c542" stroke-width="1.5" fill="none"/><circle cx="60" cy="72" r="6" fill="${GOLD}" stroke="${GOLD_D}"/><circle cx="60" cy="72" r="3.2" fill="${GEM}"/></g>`;
   return `<g${fAttr(Math.max(am.l, am.r >= 3 ? 3 : 0))}><path d="M50 61 Q60 75 70 61" stroke="#facc15" stroke-width="1.3" fill="none"/><circle cx="60" cy="72" r="4.5" fill="${RARITY[am.r].c}" stroke="#fff" stroke-width="1"/></g>`;
 }
 function heroSVG(eq, fx = true) {
   const w = eq.weapon, h = eq.helmet, a = eq.armor, sl = sleeveColor(a), skin = '#f1c27d';
+  const full = legendarySet(eq), hand = isLeg(a) ? GOLD : skin, leg = isLeg(eq.boots) ? GOLD : '#6b4a2e';
   let s = `<svg viewBox="0 0 130 160" class="herosvg" xmlns="http://www.w3.org/2000/svg">`;
-  if (fx && SLOT_ORDER.some(k => eq[k] && eq[k].l >= 9)) s += `<ellipse class="aura" cx="62" cy="92" rx="56" ry="68" fill="url(#auraG)"/>`;
+  if (fx && (full || SLOT_ORDER.some(k => eq[k] && eq[k].l >= 9))) s += `<ellipse class="aura" cx="62" cy="88" rx="62" ry="74" fill="url(#auraG)"/>`;
   s += `<ellipse cx="60" cy="148" rx="30" ry="5" fill="rgba(0,0,0,.35)"/>`;
-  s += `<rect x="30" y="64" width="10" height="34" rx="5" fill="${sl}"/><circle cx="35" cy="99" r="5" fill="${skin}"/>`;
-  s += `<rect x="47" y="104" width="11" height="32" rx="3" fill="#3b3355"/><rect x="62" y="104" width="11" height="32" rx="3" fill="#3b3355"/>`;
+  if (full) s += wingSVG();
+  s += `<rect x="30" y="64" width="10" height="34" rx="5" fill="${sl}"/><circle cx="35" cy="99" r="5" fill="${hand}"/>`;
+  s += `<rect x="47" y="104" width="11" height="32" rx="3" fill="${leg}"/><rect x="62" y="104" width="11" height="32" rx="3" fill="${leg}"/>`;
+  if (isLeg(eq.boots)) s += `<circle cx="52.5" cy="118" r="2.4" fill="${GEM}"/><circle cx="67.5" cy="118" r="2.4" fill="${GEM}"/>`;
   s += bootsSVG(eq.boots) + torsoSVG(a) + (eq.amulet ? amuletSVG(eq.amulet) : '');
   if (!(h && h.b === 'pumpkin')) {
-    s += `<rect x="55" y="55" width="10" height="9" fill="${skin}"/><circle cx="60" cy="44" r="17" fill="${skin}"/><circle cx="54" cy="46" r="2.2" fill="#222"/><circle cx="66" cy="46" r="2.2" fill="#222"/><path d="M55 53 Q60 57 65 53" stroke="#7a4a2a" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
-    if (!h) s += `<path d="M43 42 Q44 24 60 25 Q76 24 77 42 Q70 33 60 34 Q50 33 43 42Z" fill="#5b3a1e"/>`;
+    s += `<rect x="55" y="55" width="10" height="9" fill="#e0ad6a"/><ellipse cx="43.5" cy="46" rx="3" ry="4" fill="#e9b676"/><ellipse cx="76.5" cy="46" rx="3" ry="4" fill="#e9b676"/>
+      <path d="M44 42 Q44 26 60 26 Q76 26 76 42 Q76 56 68 60 Q60 64 52 60 Q44 56 44 42Z" fill="${skin}"/>
+      <path d="M50 41 Q53.5 39 57 41 M63 41 Q66.5 39 70 41" stroke="#5a3418" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="53.5" cy="45.5" rx="2" ry="2.3" fill="#3a2414"/><ellipse cx="66.5" cy="45.5" rx="2" ry="2.3" fill="#3a2414"/><circle cx="54.2" cy="44.8" r=".6" fill="#fff"/><circle cx="67.2" cy="44.8" r=".6" fill="#fff"/>
+      <path d="M60 46 Q58.5 51 60.5 52" stroke="#c98c55" stroke-width="1.2" fill="none" stroke-linecap="round"/><path d="M55.5 55 Q60 58 64.5 55" stroke="#9a5a34" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
+    if (!h) s += `<path d="M43 45 Q40 27 53 23 Q60 17 70 21 Q80 25 77 45 Q75 35 70 32 Q66 29 61 31 Q55 34 49 33 Q45 36 43 45Z" fill="#6b4226"/><path d="M53 23 Q62 15 72 22 Q64 20 58 25Z" fill="#8a5a33"/><path d="M50 27 Q56 25 60 28" stroke="#8a5a33" stroke-width="1.2" fill="none"/>`;
   }
-  if (h) s += helmetSVG(h);
-  s += `<g class="warm" style="transform-origin:83px 66px"><rect x="78" y="62" width="10" height="30" rx="5" fill="${sl}" transform="rotate(-28 83 66)"/><g transform="translate(95 89) rotate(22)">${w ? weaponSVG(w, fx) : ''}</g><circle cx="95" cy="89" r="5" fill="${skin}"/></g>`;
+  if (h) s += helmetSVG(h, fx);
+  s += `<g class="warm" style="transform-origin:83px 66px"><rect x="78" y="62" width="10" height="30" rx="5" fill="${sl}" transform="rotate(-28 83 66)"/><g transform="translate(95 89) rotate(22)">${w ? weaponSVG(w, fx) : ''}</g><circle cx="95" cy="89" r="5" fill="${hand}"/></g>`;
   return s + '</svg>';
 }
 function itemIcon(it, fx = false) {
   let vb, inner;
   switch (it.slot) {
     case 'weapon': vb = '-26 -82 52 98'; inner = weaponSVG(it, fx); break;
-    case 'helmet': vb = '28 6 66 60'; inner = (it.b === 'pumpkin' ? '' : `<circle cx="60" cy="44" r="17" fill="#f1c27d" opacity=".35"/>`) + helmetSVG(it); break;
+    case 'helmet': vb = isLeg(it) ? '26 -6 68 74' : '28 6 66 60'; inner = (it.b === 'pumpkin' ? '' : `<circle cx="60" cy="44" r="17" fill="#f1c27d" opacity=".35"/>`) + helmetSVG(it, fx); break;
     case 'armor': vb = it.b === 'robe' ? '26 54 68 82' : '28 56 64 60'; inner = torsoSVG(it); break;
     case 'boots': vb = '36 126 50 24'; inner = bootsSVG(it); break;
     default: vb = '46 56 28 24'; inner = amuletSVG(it);
@@ -1151,6 +1210,7 @@ function htmlHero() {
   const eq = equippedAll();
   const stats = SLOT_ORDER.filter(s => eq[s]).map(s => `<div>${SLOTS[s].e} ${SLOTS[s].fmt(itemValue(eq[s]))}</div>`).join('') || '<div class="sub">Załóż przedmioty, by zdobyć bonusy</div>';
   let h = `<h2>🗡️ Bohater</h2><div class="card"><div class="heroPrev">${heroSVG(eq)}</div><div class="stat">${stats}</div></div>
+  <div class="card row legset"><div class="ico">👑</div><div class="grow"><b>Legendarny komplet: ${legCount(eq)}/5</b><div class="sub">${legendarySet(eq) ? '✅ Aktywny: złoty rycerz ze skrzydłami, +50% obrażeń, +25% monet' : 'Załóż 5 legendarnych przedmiotów: złota zbroja, skrzydła, +50% obrażeń i +25% monet'}</div></div></div>
   <div class="card row"><div class="ico">💠</div><div class="grow"><b>Kamienie ulepszeń: ${S.stones}</b><div class="sub">Z bossów i z rozbierania przedmiotów</div></div></div>
   <h3>Ekwipunek</h3>`;
   SLOT_ORDER.forEach(s => {
