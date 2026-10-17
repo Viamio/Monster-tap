@@ -1,0 +1,31 @@
+name: Zbuduj aplikację Android
+on:
+  push:
+    paths: ['android/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Zbuduj APK
+        working-directory: android
+        run: gradle assembleRelease --no-daemon
+      - run: cp android/app/build/outputs/apk/release/app-release.apk MonsterTap.apk
+      - name: Opublikuj w Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: Monster Tap – aplikacja Android
+          body: Pobierz MonsterTap.apk na telefonie i zainstaluj. Gra aktualizuje się sama – nie trzeba instalować ponownie.
+          files: MonsterTap.apk
+          make_latest: true
