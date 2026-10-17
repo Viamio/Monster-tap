@@ -366,7 +366,7 @@ h3{font-size:16px;margin:12px 0 8px}
    Zmień GAME_VERSION przy każdej aktualizacji na GitHubie –
    gracze zobaczą pasek „Aktualizuj”, a postęp zostanie zachowany.
    ========================================================= */
-const GAME_VERSION = '1.5.2';
+const GAME_VERSION = '1.5.3';
 const SAVE_KEY = 'monsterTap_save_v1';
 
 const $ = id => document.getElementById(id);
@@ -422,11 +422,11 @@ const WORLDS = [
 ];
 
 const HELPERS = [
-  { name: 'Łucznik', e: '🏹', cost: 25, dps: 1 },
-  { name: 'Mag', e: '🧙', cost: 300, dps: 8 },
-  { name: 'Rycerz', e: '⚔️', cost: 4000, dps: 60 },
-  { name: 'Elfka', e: '🧝', cost: 55000, dps: 450 },
-  { name: 'Anioł', e: '👼', cost: 800000, dps: 4000 },
+  { name: 'Łucznik', e: '🏹', cost: 1000, dps: 1 },
+  { name: 'Mag', e: '🧙', cost: 15000, dps: 8 },
+  { name: 'Rycerz', e: '⚔️', cost: 250000, dps: 60 },
+  { name: 'Elfka', e: '🧝', cost: 4e6, dps: 450 },
+  { name: 'Anioł', e: '👼', cost: 7e7, dps: 4000 },
 ];
 
 const ARTIFACTS = [
@@ -730,17 +730,19 @@ function offlineRate() {
   return kps * baseCoin(S.level) * (1 + R.B.coin);
 }
 // Koszt zakupu n poziomów (ciąg geometryczny); mode: 1, 10 lub 'max'
-function bulk(base, r, lvl, mode) {
+function bulk(base, r, lvl, mode, cap = Infinity) {
   const c0 = base * Math.pow(r, lvl);
   let n = mode === 'max' ? Math.max(1, Math.floor(Math.log(S.coins * (r - 1) / c0 + 1) / Math.log(r))) : mode;
+  n = Math.max(1, Math.min(n, cap - lvl));
   return { n, cost: c0 * (Math.pow(r, n) - 1) / (r - 1) };
 }
-const CLICK_R = 1.07, HELPER_R = 1.08;
-const critCCost = () => 100 * Math.pow(1.5, S.critChanceLvl);
-const critMCost = () => 250 * Math.pow(1.6, S.critMultLvl);
+const CLICK_BASE = 100, CLICK_R = 1.14, HELPER_R = 1.16;   // wzrost ceny: 14% / 16% za poziom
+const CRITC_BASE = 500, CRITC_R = 2.0, CRITM_BASE = 1500, CRITM_R = 2.2;
+const critCCost = () => CRITC_BASE * Math.pow(CRITC_R, S.critChanceLvl);
+const critMCost = () => CRITM_BASE * Math.pow(CRITM_R, S.critMultLvl);
 const CRIT_C_MAX = 25, CRIT_M_MAX = 40;
 function cheapestUpgrade() {
-  const c = [10 * Math.pow(CLICK_R, S.clickLvl)];
+  const c = [CLICK_BASE * Math.pow(CLICK_R, S.clickLvl)];
   HELPERS.forEach((h, i) => { if (i === 0 || S.helpers[i - 1] > 0 || S.helpers[i] > 0) c.push(h.cost * Math.pow(HELPER_R, S.helpers[i])); });
   if (S.critChanceLvl < CRIT_C_MAX) c.push(critCCost());
   if (S.critMultLvl < CRIT_M_MAX) c.push(critMCost());
@@ -1065,17 +1067,21 @@ function catchGolden(e) {
    8. ULEPSZENIA I POMOCNICY
    ========================================================= */
 function buyClick() {
-  const b = bulk(10, CLICK_R, S.clickLvl, R.buyMult);
+  const b = bulk(CLICK_BASE, CLICK_R, S.clickLvl, R.buyMult);
   if (S.coins < b.cost) return;
   S.coins -= b.cost; S.clickLvl += b.n; vibrate(8); renderPanel();
 }
 function buyCritC() {
-  if (S.critChanceLvl >= CRIT_C_MAX || S.coins < critCCost()) return;
-  S.coins -= critCCost(); S.critChanceLvl++; vibrate(8); renderPanel();
+  if (S.critChanceLvl >= CRIT_C_MAX) return;
+  const b = bulk(CRITC_BASE, CRITC_R, S.critChanceLvl, R.buyMult, CRIT_C_MAX);
+  if (S.coins < b.cost) return;
+  S.coins -= b.cost; S.critChanceLvl += b.n; vibrate(8); renderPanel();
 }
 function buyCritM() {
-  if (S.critMultLvl >= CRIT_M_MAX || S.coins < critMCost()) return;
-  S.coins -= critMCost(); S.critMultLvl++; vibrate(8); renderPanel();
+  if (S.critMultLvl >= CRIT_M_MAX) return;
+  const b = bulk(CRITM_BASE, CRITM_R, S.critMultLvl, R.buyMult, CRIT_M_MAX);
+  if (S.coins < b.cost) return;
+  S.coins -= b.cost; S.critMultLvl += b.n; vibrate(8); renderPanel();
 }
 function buyHelper(i) {
   i = +i;
@@ -1922,7 +1928,7 @@ function renderPanel() {
 function htmlUpgrades() {
   const m = R.buyMult;
   const multChips = [1, 10, 'max'].map(x => `<button class="chip ${m === x ? 'on' : ''}" data-act="mult" data-arg="${x}">${x === 'max' ? 'MAX' : '×' + x}</button>`).join('');
-  const cb = bulk(10, CLICK_R, S.clickLvl, m);
+  const cb = bulk(CLICK_BASE, CLICK_R, S.clickLvl, m);
   let h = `<h2>⬆️ Ulepszenia</h2>
   <div class="stat card"><div>👆 Kliknięcie: <b>${fmt(clickDamage())}</b></div><div>⚔️ DPS: <b>${fmt(totalDps())}</b></div>
   <div>🎯 Kryt: <b>${Math.round(critChance() * 100)}%</b></div><div>💥 Mnożnik: <b>×${critMult().toFixed(2)}</b></div></div>
@@ -1932,10 +1938,10 @@ function htmlUpgrades() {
   <button class="btn ${S.coins >= cb.cost ? '' : 'off'}" data-act="buyClick">+${cb.n}<br>🪙 ${fmt(cb.cost)}</button></div>
   <div class="card row"><div class="ico">🎯</div><div class="grow"><b>Szansa krytyka</b><span class="lv">${S.critChanceLvl}/${CRIT_C_MAX}</span>
   <div class="sub">+1% szansy za poziom</div></div>
-  ${S.critChanceLvl >= CRIT_C_MAX ? '<b class="done-t">MAX</b>' : `<button class="btn ${S.coins >= critCCost() ? '' : 'off'}" data-act="buyCritC">+1<br>🪙 ${fmt(critCCost())}</button>`}</div>
+  ${S.critChanceLvl >= CRIT_C_MAX ? '<b class="done-t">MAX</b>' : (b => `<button class="btn ${S.coins >= b.cost ? '' : 'off'}" data-act="buyCritC">+${b.n}<br>🪙 ${fmt(b.cost)}</button>`)(bulk(CRITC_BASE, CRITC_R, S.critChanceLvl, m, CRIT_C_MAX))}</div>
   <div class="card row"><div class="ico">💥</div><div class="grow"><b>Mnożnik krytyka</b><span class="lv">${S.critMultLvl}/${CRIT_M_MAX}</span>
   <div class="sub">+0,25× za poziom</div></div>
-  ${S.critMultLvl >= CRIT_M_MAX ? '<b class="done-t">MAX</b>' : `<button class="btn ${S.coins >= critMCost() ? '' : 'off'}" data-act="buyCritM">+1<br>🪙 ${fmt(critMCost())}</button>`}</div>
+  ${S.critMultLvl >= CRIT_M_MAX ? '<b class="done-t">MAX</b>' : (b => `<button class="btn ${S.coins >= b.cost ? '' : 'off'}" data-act="buyCritM">+${b.n}<br>🪙 ${fmt(b.cost)}</button>`)(bulk(CRITM_BASE, CRITM_R, S.critMultLvl, m, CRIT_M_MAX))}</div>
   <h3>🧑‍🤝‍🧑 Pomocnicy (automatyczny DPS)</h3>`;
   HELPERS.forEach((hp, i) => {
     const unlocked = i === 0 || S.helpers[i - 1] > 0 || S.helpers[i] > 0;
@@ -2439,6 +2445,14 @@ function updateFightUI(now) {
     setText($('bossTxt'), `⏱️ ${Math.max(0, S.bossLeft).toFixed(1)} s${frozen ? ' ❄️ ZAMROŻONY' : ''}`);
   }
   monsterEl.classList.toggle('frozen', frozen && R.cur.boss);
+  // Umiejętności – czas odnowienia
+  for (const id in SKILLS) {
+    const el = $('sk-' + id), left = (S.skillsReady[id] - now) / 1000;
+    const tot = SKILLS[id].cd * (1 - Math.min(.6, R.B.cdr || 0));
+    el.querySelector('.cd').style.height = left > 0 ? Math.min(100, left / tot * 100) + '%' : '0';
+    setText(el.querySelector('.ct'), left > 0 ? fmtTime(left) : '');
+    el.classList.toggle('act', (id === 'freeze' && frozen) || (id === 'gold' && S.boosts.gold > now));
+  }
   // Bonus za reklamę
   const adLeft = (S.boosts.ad - now) / 1000;
   setText($('adCnt'), `${S.daily.adBoosts}/10`);
