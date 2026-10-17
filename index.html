@@ -219,20 +219,9 @@ h3{font-size:16px;margin:12px 0 8px}
 #nav button{font-size:10px}
 .wing{transform-box:fill-box;transform-origin:100% 100%;animation:flap 1.6s ease-in-out infinite alternate}
 @keyframes flap{to{transform:rotate(-7deg)}}
-.tgt{position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:4;text-align:center;line-height:1}
-.tgt.crys{font-size:34px;filter:drop-shadow(0 0 8px #60a5fa);animation:bob 1.4s ease-in-out infinite}
-.tgt.minion{font-size:40px;filter:drop-shadow(0 4px 4px rgba(0,0,0,.5))}
-.tgt .mhp{width:44px;height:5px;background:rgba(0,0,0,.6);border-radius:3px;margin:3px auto 0;overflow:hidden}
-.tgt .mhp i{display:block;height:100%;background:#ef4444}
-.tgt .pips{font-size:10px;font-weight:900;color:#bfdbfe;text-shadow:0 1px 2px #000}
 .weak{position:absolute;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;border:4px solid #fde047;box-shadow:0 0 14px #fde047,inset 0 0 12px #fde047;pointer-events:none;z-index:4;animation:weakP .5s ease-in-out infinite alternate}
 .weak::after{content:'';position:absolute;inset:16px;border-radius:50%;background:#fde047}
 @keyframes weakP{to{transform:scale(1.18)}}
-#monster.spiky #monsterEmoji{filter:drop-shadow(0 0 14px #ef4444) drop-shadow(0 0 4px #ef4444) saturate(1.6)!important}
-#monster.warn #monsterEmoji{animation:warnB .2s steps(2) infinite}
-@keyframes warnB{50%{filter:brightness(1.8) drop-shadow(0 0 10px #facc15)}}
-#mechBar{text-align:center;font-size:13px;font-weight:800;border-radius:10px;padding:4px 8px;background:rgba(0,0,0,.45)}
-#mechBar.danger{background:rgba(220,38,38,.75);animation:warnB .4s steps(2) infinite}
 .cauldron{font-size:80px;display:inline-block;margin:6px 0}
 .fuseRow{display:flex;justify-content:center;gap:8px;margin:8px 0}
 .fuseRow .cell{width:64px;height:64px}
@@ -319,7 +308,6 @@ h3{font-size:16px;margin:12px 0 8px}
       <div id="boosts"></div>
       <div id="monsterName"></div>
       <div class="bar"><div id="hpFill"></div><span id="hpTxt"></span></div>
-      <div id="mechBar" class="hidden"></div>
       <div class="bar hidden" id="bossBar"><div id="bossFill"></div><span id="bossTxt"></span></div>
       <div id="arena">
         <div id="deco"></div>
@@ -378,7 +366,7 @@ h3{font-size:16px;margin:12px 0 8px}
    Zmień GAME_VERSION przy każdej aktualizacji na GitHubie –
    gracze zobaczą pasek „Aktualizuj”, a postęp zostanie zachowany.
    ========================================================= */
-const GAME_VERSION = '1.5.0';
+const GAME_VERSION = '1.5.1';
 const SAVE_KEY = 'monsterTap_save_v1';
 
 const $ = id => document.getElementById(id);
@@ -566,15 +554,6 @@ const BASES = {
 /* Łączenie przedmiotów */
 const FUSE_CHANCE = [.9, .7, .5, .3, .15];      // szansa: z rzadkości N na N+1
 const FUSE_STONES = [5, 15, 40, 100, 250];
-/* Mechaniki bossów */
-const BOSS_MECH = {
-  shield: { n: '🛡️ Tarcza', d: 'Rozbij 3 kryształy 🔷 (3 stuknięcia każdy) – do tego czasu boss dostaje tylko 10% obrażeń' },
-  heal: { n: '💚 Leczenie', d: 'Gdy przestaniesz bić na 1,5 s, boss leczy się' },
-  spikes: { n: '🔺 Kolce', d: 'Gdy boss świeci na czerwono – NIE klikaj! Kara: −1 s i utrata combo' },
-  minions: { n: '👺 Sługi', d: 'Przy połowie HP przywołuje 3 sługi – boss jest nietykalny, dopóki żyją' },
-};
-const MECH_ORDER = ['shield', 'heal', 'spikes', 'minions'];
-const bossMech = l => (l / 10) < 3 ? null : MECH_ORDER[(l / 10) % 4];
 /* Klasy postaci (od pierwszego prestiżu) */
 const CLASSES = {
   warrior: { n: 'Wojownik', e: '⚔️', cape: '#b91c1c', d: '+50% obrażeń kliknięcia (+25% za każdy prestiż, maks. 10)', fx: p => [['click', .5 + .25 * p]] },
@@ -863,11 +842,8 @@ function spawnMonster() {
   R.cur = { boss, em, ev, elite, name: (elite ? 'Elitarny ' : '') + name, max: monsterMaxHp(l) };
   S.hp = R.cur.max;
   clearTargets();
-  monsterEl.classList.remove('spiky', 'warn');
-  R.mech = boss ? { type: bossMech(l), start: Date.now(), spawned: false } : null;
   R.weakNext = Date.now() + 2500;
-  if (boss) S.bossLeft = 30 + R.B.bossT + (R.mech.type ? 10 : 0);
-  if (boss && R.mech.type) setTimeout(() => setupMech(), 380);
+  if (boss) S.bossLeft = 30 + R.B.bossT;
   monsterEmoji.textContent = em;
   monsterEmoji.style.filter = elite ? 'hue-rotate(150deg) saturate(1.6)' : '';
   monsterEl.classList.toggle('boss', boss);
@@ -876,7 +852,7 @@ function spawnMonster() {
   WORLDS.forEach(x => app.classList.remove(x.cls));
   app.classList.add(w.cls);
   $('deco').textContent = w.deco;
-  setText($('monsterName'), (boss ? '👑 BOSS: ' : '') + R.cur.name + (ev ? ' ' + E.e : '') + (boss && R.mech.type ? ' · ' + BOSS_MECH[R.mech.type].n : ''));
+  setText($('monsterName'), (boss ? '👑 BOSS: ' : '') + R.cur.name + (ev ? ' ' + E.e : ''));
   setText($('worldName'), w.icon + ' ' + w.name + (worldCycle(l) ? ' +' + worldCycle(l) : ''));
 }
 
@@ -891,11 +867,9 @@ function onTap(e) {
     if (S.combo >= 100) startFrenzy();
   }
   R.lastTap = performance.now();
-  // Mechaniki bossa: kolce, kryształy, sługi, słabe punkty
+  // Słaby punkt bossa
   const ar = arena.getBoundingClientRect(), tx = e.clientX - ar.left, ty = e.clientY - ar.top;
-  if (spikesOn()) { spikePenalty(tx, ty); return; }
   const tg = targetAt(tx, ty);
-  if (tg && tg.type !== 'weak') { hitTarget(tg, tx, ty); return; }
   const weakHit = !!tg;
   if (weakHit) removeTarget(tg);
   let d = clickDamage();
@@ -942,10 +916,6 @@ function sunRay(w) {
 }
 function dealDamage(d) {
   if (R.dying) return;
-  R.lastHitMs = Date.now();
-  const mins = R.targets.filter(t => t.type === 'minion');
-  if (mins.length) { hitMinion(mins[0], d); return; }
-  d *= bossDmgFactor();
   S.hp -= d;
   if (S.hp <= 0) { S.hp = 0; kill(); }
 }
@@ -1443,77 +1413,25 @@ function htmlHero() {
 }
 
 /* =========================================================
-   8c. MECHANIKI BOSSÓW I SŁABE PUNKTY
+   8c. SŁABE PUNKTY BOSSÓW
    ========================================================= */
 R.targets = [];
 function clearTargets() { (R.targets || []).forEach(t => t.el && t.el.remove()); R.targets = []; }
 function removeTarget(t) { if (t.el) t.el.remove(); R.targets = R.targets.filter(x => x !== t); }
-function addTarget(type, x, y, extra) {
-  const el = document.createElement('div');
-  el.className = type === 'weak' ? 'weak' : 'tgt ' + type;
-  el.style.left = x + 'px'; el.style.top = y + 'px';
-  const t = Object.assign({ type, x, y, el }, extra || {});
-  if (type === 'crys') el.innerHTML = `🔷<div class="pips">●●●</div>`;
-  if (type === 'minion') el.innerHTML = `👺<div class="mhp"><i style="width:100%"></i></div>`;
-  fx.appendChild(el); R.targets.push(t); return t;
-}
 function targetAt(x, y) {
   let best = null, bd = 40;
   for (const t of R.targets) { const d = Math.hypot(t.x - x, t.y - y); if (d < bd) { bd = d; best = t; } }
   return best;
 }
-function setupMech() {
-  if (!R.cur || !R.cur.boss || !R.mech || R.dying) return;
-  const p = monsterCenter(), m = R.mech.type;
-  if (m === 'shield') [[-78, -40], [78, -40], [0, 80]].forEach(o => addTarget('crys', p.x + o[0], p.y + o[1], { hp: 3 }));
-  if (!S.seenMech) S.seenMech = {};
-  if (!S.seenMech[m]) { S.seenMech[m] = true; showModal(`<h2>👑 Nowa mechanika bossa</h2><div class="big" style="font-size:24px">${BOSS_MECH[m].n}</div><p>${BOSS_MECH[m].d}</p><p class="sub">Bossowie z mechaniką mają +10 s na licznik.</p><button class="btn wide" data-act="closeModal">Rozumiem!</button>`); }
-}
-const spikePhase = now => { if (!R.mech || R.mech.type !== 'spikes') return 0; const c = (now - R.mech.start) % 7000; return c > 5000 ? 2 : c > 4000 ? 1 : 0; };
-const spikesOn = () => !!(R.cur && R.cur.boss && !R.dying && spikePhase(Date.now()) === 2);
-function spikePenalty(x, y) {
-  S.combo = 0; S.bossLeft = Math.max(0, S.bossLeft - 1);
-  popText(x, y - 10, 'AUĆ! −1 s', 'crit'); vibrate(180); sfxBad();
-  try { $('app').animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 200 }); } catch (e) { }
-}
-function bossDmgFactor() {
-  if (!R.cur || !R.cur.boss || !R.mech) return 1;
-  if (R.mech.type === 'shield' && R.targets.some(t => t.type === 'crys')) return 0.1;
-  if (R.targets.some(t => t.type === 'minion')) return 0;
-  return 1;
-}
-function hitTarget(t, x, y) {
-  heroSwing(false); shake(); vibrate(15); sfxHit(false);
-  if (t.type === 'crys') {
-    t.hp--; t.el.querySelector('.pips').textContent = '●'.repeat(t.hp) + '○'.repeat(3 - t.hp);
-    particles(t.x, t.y, 6);
-    if (t.hp <= 0) { particles(t.x, t.y, 16, true); popText(t.x, t.y - 20, '💥', 'big'); removeTarget(t); if (!R.targets.some(z => z.type === 'crys')) toast('🛡️ Tarcza bossa rozbita!', 'gold'); }
-  } else if (t.type === 'minion') {
-    let d = clickDamage(); const crit = Math.random() < critChance(); if (crit) d *= critMult();
-    if (S.boosts.frenzy > Date.now()) d *= 5; if (R.god) d *= 1000;
-    popText(x, y - 10, (crit ? '💥' : '') + fmt(d), crit ? 'crit' : '');
-    hitMinion(t, d);
-  }
-}
-function hitMinion(t, d, quiet) {
-  t.hp -= d;
-  const bar = t.el.querySelector('.mhp i'); if (bar) bar.style.width = Math.max(0, t.hp / t.max * 100) + '%';
-  if (t.hp <= 0) { particles(t.x, t.y, 12, true); removeTarget(t); if (!R.targets.some(z => z.type === 'minion')) toast('👺 Sługi pokonane – bij bossa!', 'gold'); }
-}
-function mechTick(now, dt) {
-  const m = R.mech; if (!m) return;
-  if (m.type === 'heal' && now - (R.lastHitMs || m.start) > 1500) S.hp = Math.min(R.cur.max, S.hp + R.cur.max * 0.04 * dt);
-  if (m.type === 'minions' && !m.spawned && S.hp <= R.cur.max * 0.5) {
-    m.spawned = true; const p = monsterCenter();
-    [[-80, -30], [80, -30], [0, 85]].forEach(o => addTarget('minion', p.x + o[0], p.y + o[1], { hp: R.cur.max * 0.04, max: R.cur.max * 0.04 }));
-    toast('👺 Boss przywołał sługi!'); vibrate([40, 40, 40]);
-  }
-  // słabe punkty na bossach
-  const weak = R.targets.find(t => t.type === 'weak');
+function weakTick(now) {
+  const weak = R.targets[0];
   if (weak && now > weak.until) removeTarget(weak);
-  if (!weak && now > (R.weakNext || 0) && !R.targets.some(t => t.type === 'minion') && spikePhase(now) === 0) {
-    const p = monsterCenter();
-    addTarget('weak', p.x + rand(-45, 45), p.y + rand(-45, 40), { until: now + 2200 });
+  if (!R.targets.length && now > (R.weakNext || 0)) {
+    const p = monsterCenter(), el = document.createElement('div');
+    const x = p.x + rand(-45, 45), y = p.y + rand(-45, 40);
+    el.className = 'weak'; el.style.left = x + 'px'; el.style.top = y + 'px';
+    fx.appendChild(el);
+    R.targets.push({ type: 'weak', x, y, el, until: now + 2200 });
     R.weakNext = now + rand(2500, 4500);
   }
 }
@@ -2055,7 +1973,6 @@ function shopDo(id) {
   toast(`🛒 Kupiono: ${it.name}`, 'gold'); renderPanel();
 }
 function autoHit() {
-  if (spikesOn()) return;
   let d = clickDamage();
   const crit = Math.random() < critChance();
   if (crit) d *= critMult();
@@ -2259,7 +2176,7 @@ function htmlMore() {
     h += `<p class="sub" style="margin-bottom:10px">Narzędzia do testowania. Zmieniają Twój zapis gry.</p>
     <h3>💰 Zasoby</h3><div class="tgrid">${T('coins', '+🪙 dużo monet')}${T('gems', '+1000 💎')}${T('stones', '+100 💠')}${T('crystals', '+10 🔮')}${T('chests', '+5 📦 +5 🎁')}${T('cards', '+10 kart 🃏')}${T('candy', '+100 🍬')}${T('eventcur', 'Reset dnia (zadania, koło)')}</div>
     <h3>⚔️ Przedmioty</h3><div class="tgrid">${RARITY.slice(0, 5).map((r, i) => T('item' + i, `<span style="color:${r.c}">${r.n}</span>`)).join('')}${T('sun', '🏆 Ostrze 1/1', 'purple')}${T('wup', 'Broń +1')}${T('legset', '👑 Legendarny komplet')}${T('clearbag', '🗑️ Wyczyść plecak')}</div>
-    <h3>👹 Walka</h3><div class="tgrid">${T('kill', 'Zabij potwora')}${T('boss', 'Następny boss')}${T('lvl10', 'Poziom +10')}${T('lvl100', 'Poziom +100')}${T('lvlm10', 'Poziom −10')}${T('frenzy', '🔥 Szał teraz')}${T('golden', '💰 Złoty skarb')}${T('cd', 'Odnów umiejętności')}${T('offline', '😴 Test offline 2 h')}${T('god', R.god ? '🧪 ×1000 WŁ.' : '🧪 ×1000 obrażeń', R.god ? 'green' : 'ghost')}${T('mech', '👑 Boss z mechaniką')}</div>
+    <h3>👹 Walka</h3><div class="tgrid">${T('kill', 'Zabij potwora')}${T('boss', 'Następny boss')}${T('lvl10', 'Poziom +10')}${T('lvl100', 'Poziom +100')}${T('lvlm10', 'Poziom −10')}${T('frenzy', '🔥 Szał teraz')}${T('golden', '💰 Złoty skarb')}${T('cd', 'Odnów umiejętności')}${T('offline', '😴 Test offline 2 h')}${T('god', R.god ? '🧪 ×1000 WŁ.' : '🧪 ×1000 obrażeń', R.god ? 'green' : 'ghost')}</div>
     <h3>🆕 Nowości</h3><div class="tgrid">${T('merchant', '🧳 Kupiec teraz')}${T('xp', '+500 XP przepustki')}${T('build', '🏰 Dokończ budowę')}${T('luck', '+5 🍀')}${T('cls', '🧙 Odblokuj/zmień klasę')}${T('fuse', '+3 epickie (fuzja)')}</div>
     <button class="btn red wide" data-act="t" data-arg="off">Ukryj panel testera</button>`;
   }
@@ -2305,7 +2222,6 @@ function testerAct(a) {
     case 'cd': for (const k in S.skillsReady) S.skillsReady[k] = 0; break;
     case 'offline': S.lastSeen = now - 2 * 3600e3; checkOffline(); break;
     case 'god': R.god = !R.god; break;
-    case 'mech': lvl(Math.max(30, Math.ceil((S.level + 1) / 10) * 10)); break;
     case 'merchant': S.merchant.next = 1; S.merchant.until = 0; merchantTick(); break;
     case 'xp': addXP(500); break;
     case 'build': if (S.village.build) S.village.build.until = 1; villageTick(); break;
@@ -2489,34 +2405,6 @@ function updateFightUI(now) {
     setText($('bossTxt'), `⏱️ ${Math.max(0, S.bossLeft).toFixed(1)} s${frozen ? ' ❄️ ZAMROŻONY' : ''}`);
   }
   monsterEl.classList.toggle('frozen', frozen && R.cur.boss);
-  const mb = $('mechBar'), mt = R.cur.boss && R.mech && R.mech.type;
-  mb.classList.toggle('hidden', !mt);
-  if (mt) {
-    let txt = BOSS_MECH[mt].n + ': ', danger = false;
-    if (mt === 'spikes') { const ph = spikePhase(now); danger = ph === 2; txt += ph === 2 ? '⛔ NIE KLIKAJ!' : ph === 1 ? '⚠️ Zaraz kolce…' : 'bij teraz!'; monsterEl.classList.toggle('spiky', ph === 2); monsterEl.classList.toggle('warn', ph === 1); }
-    else if (mt === 'shield') { const c = R.targets.filter(t => t.type === 'crys').length; txt += c ? `rozbij kryształy 🔷 (${c}/3) – obrażenia 10%` : 'tarcza rozbita! 💥'; }
-    else if (mt === 'heal') txt += Date.now() - (R.lastHitMs || 0) > 1500 ? 'leczy się – bij!' : 'nie przestawaj bić';
-    else if (mt === 'minions') { const c = R.targets.filter(t => t.type === 'minion').length; txt += c ? `pokonaj sługi (${c}) – boss nietykalny` : R.mech.spawned ? 'sługi pokonane!' : 'przy 50% HP przywoła sługi'; danger = c > 0; }
-    setText(mb, txt); mb.classList.toggle('danger', danger);
-  } else { monsterEl.classList.remove('spiky', 'warn'); }
-  // Combo / szał
-  const frenzy = S.boosts.frenzy > now;
-  $('app').classList.toggle('frenzy', frenzy);
-  if (frenzy) {
-    const left = (S.boosts.frenzy - now) / 1000;
-    $('comboFill').style.width = (left / (10 + R.B.frenzyT) * 100) + '%';
-    setText($('comboTxt'), `🔥 SZAŁ ×5 — ${Math.ceil(left)} s`);
-  } else {
-    $('comboFill').style.width = S.combo + '%';
-    setText($('comboTxt'), S.combo > 1 ? `⚡ COMBO ${Math.floor(S.combo)}%` : 'Klikaj szybko, by napełnić COMBO');
-  }
-  // Umiejętności
-  for (const id in SKILLS) {
-    const el = $('sk-' + id), left = (S.skillsReady[id] - now) / 1000;
-    el.querySelector('.cd').style.height = left > 0 ? (left / SKILLS[id].cd * 100) + '%' : '0';
-    setText(el.querySelector('.ct'), left > 0 ? fmtTime(left) : '');
-    el.classList.toggle('act', (id === 'freeze' && frozen) || (id === 'gold' && S.boosts.gold > now));
-  }
   // Bonus za reklamę
   const adLeft = (S.boosts.ad - now) / 1000;
   setText($('adCnt'), `${S.daily.adBoosts}/10`);
@@ -2535,7 +2423,6 @@ function updateFightUI(now) {
   if (sw) chips.push(sw.l >= 9 && S.boosts.frenzy > now ? '☀️ ZAĆMIENIE!' : `☀️ ${R.sun || 0}/${sw.l >= 6 ? 20 : 25}`);
   if (R.burn && R.burn.until > now) chips.push(`🔥 Podpalenie ×${R.burn.st}`);
   if (R.god) chips.push('🧪 ×1000');
-  if (R.cur && R.cur.boss && R.mech && R.mech.type === 'heal' && Date.now() - (R.lastHitMs || 0) > 1500) chips.push('💚 Boss się leczy!');
   const ch = chips.map(c => `<span class="bchip">${c}</span>`).join('') + (merchantActive() ? `<span class="bchip btnchip" data-act="goMerchant">🧳 Kupiec ${fmtTime((S.merchant.until - now) / 1000)}</span>` : '') + (autoRate() ? `<span class="bchip btnchip" data-act="autoToggle">🤖 ${S.shop.autoOn ? autoRate() + '/s' : 'wył.'}</span>` : '');
   const bx = $('boosts'); if (bx._h !== ch) { bx._h = ch; bx.innerHTML = ch; }
   // Pasek do następnego ulepszenia
@@ -2566,10 +2453,7 @@ function tick() {
   if (!R.dying && R.cur) {
     const dps = totalDps();
     if (dps > 0) {
-      const mins = R.targets.filter(t => t.type === 'minion');
-      if (mins.length) hitMinion(mins[0], dps * dt, true);
-      else S.hp -= dps * dt * bossDmgFactor();
-      R.dpsAcc += dps * dt;
+      S.hp -= dps * dt; R.dpsAcc += dps * dt;
       if (t - R.lastDpsPop > 1000) {
         R.lastDpsPop = t;
         if (R.tab === 'fight' && R.dpsAcc > 0) { const r = monsterCenter(); popText(r.x + rand(-50, 50), r.y + rand(-40, 20), '⚔️' + fmt(R.dpsAcc), 'dps'); }
@@ -2578,14 +2462,14 @@ function tick() {
       if (S.hp <= 0) { S.hp = 0; kill(); }
     }
     if (R.cur.boss && !R.dying) {
-      mechTick(now, dt);
+      weakTick(now);
       if (S.boosts.freeze <= now) S.bossLeft -= dt;
       if (S.bossLeft <= 0) bossFail();
     }
   }
   // Podpalenie z Ostrza Pożeracza Słońc
   if (R.burn && R.burn.until > now && !R.dying && R.cur) {
-    const bd = R.burn.dps * R.burn.st * dt * bossDmgFactor();
+    const bd = R.burn.dps * R.burn.st * dt;
     S.hp -= bd; R.burnAcc = (R.burnAcc || 0) + bd;
     if (t - (R.lastBurnPop || 0) > 700) { R.lastBurnPop = t; const p = monsterCenter(); popText(p.x + rand(-30, 30), p.y + rand(-20, 30), '🔥' + fmt(R.burnAcc), 'crit'); R.burnAcc = 0; }
     if (S.hp <= 0) { S.hp = 0; kill(); }
