@@ -219,6 +219,19 @@ h3{font-size:16px;margin:12px 0 8px}
 #nav button{font-size:10px}
 .wing{transform-box:fill-box;transform-origin:100% 100%;animation:flap 1.6s ease-in-out infinite alternate}
 @keyframes flap{to{transform:rotate(-7deg)}}
+.myth{border:2px solid #ffd700!important;box-shadow:0 0 10px #ffd700,inset 0 0 8px rgba(255,215,0,.45);animation:mythG 1.6s ease-in-out infinite alternate;background:radial-gradient(circle,#5a3a00,#1a1000 75%)!important}
+@keyframes mythG{to{box-shadow:0 0 18px #ffb800,inset 0 0 12px rgba(255,215,0,.7)}}
+.uimg{width:100%;height:100%;object-fit:cover;border-radius:7px;display:block}
+.one{position:absolute;top:-6px;left:-6px;background:linear-gradient(180deg,#fff3b0,#f5c542);color:#3a2400;font-size:9px;font-weight:900;border-radius:6px;padding:1px 4px;box-shadow:0 1px 3px #000;z-index:2}
+.bigIco.uni{width:120px;height:120px;border-radius:14px;padding:4px;position:relative}
+.sunray{position:absolute;width:70px;margin-left:-35px;top:0;pointer-events:none;z-index:3;background:linear-gradient(180deg,rgba(255,255,255,0),#fff6c2 40%,#ffb020);border-radius:0 0 35px 35px;filter:blur(1px) drop-shadow(0 0 18px #ffb020);animation:sunray .45s ease-out forwards}
+@keyframes sunray{from{opacity:0;transform:scaleX(.2)}20%{opacity:1;transform:scaleX(1)}to{opacity:0;transform:scaleX(1.6)}}
+#app.sunflash::after{content:'';position:absolute;inset:0;background:rgba(255,220,120,.35);pointer-events:none;animation:fadeO .35s forwards;z-index:50}
+@keyframes fadeO{to{opacity:0}}
+.lore{font-style:italic;color:#fde68a;font-size:13px;margin:6px 0}
+.power{background:rgba(255,180,0,.12);border:1px solid rgba(255,200,0,.4);border-radius:12px;padding:8px;text-align:left;font-size:13px;margin:8px 0}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.tgrid .btn{min-width:0;font-size:13px}
 .shopgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .shopc{position:relative;background:linear-gradient(160deg,#2f2766,#1f1945);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:12px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
 .shopc .se{font-size:40px;line-height:1.1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.4))}
@@ -331,7 +344,7 @@ h3{font-size:16px;margin:12px 0 8px}
    Zmień GAME_VERSION przy każdej aktualizacji na GitHubie –
    gracze zobaczą pasek „Aktualizuj”, a postęp zostanie zachowany.
    ========================================================= */
-const GAME_VERSION = '1.3.0';
+const GAME_VERSION = '1.4.0';
 const SAVE_KEY = 'monsterTap_save_v1';
 
 const $ = id => document.getElementById(id);
@@ -489,8 +502,18 @@ const RARITY = [
   { n: 'Rzadki', c: '#60a5fa', m: 2.5, salv: 4 },
   { n: 'Epicki', c: '#c084fc', m: 4, salv: 8 },
   { n: 'Legendarny', c: '#fb923c', m: 7, salv: 16 },
+  { n: 'Mityczny', c: '#ffd700', m: 12, salv: 40 },
 ];
-const METAL = ['#c9ced8', '#b9f5cc', '#a9d2ff', '#e2c6ff', '#ffd29a'];
+const METAL = ['#c9ced8', '#b9f5cc', '#a9d2ff', '#e2c6ff', '#ffd29a', '#ffe28a'];
+/* Unikaty 1/1 – w grze istnieje tylko jeden egzemplarz */
+const UNIQUES = {
+  sunblade: {
+    slot: 'weapon', name: 'Ostrze Pożeracza Słońc', img: 'items/sunblade.png', icon: 'items/sunblade-icon.png',
+    lore: 'Wykute w sercu umierającej gwiazdy. Mówią, że w jego ostrzu wciąż płonie zjedzone słońce.',
+    power: '☀️ <b>Żar Słońca:</b> co 25. kliknięcie spada promień słońca (×10 obrażeń).<br>+3: promień podpala potwora na 3 s.<br>+6: promień co 20 kliknięć, podpalenie kumuluje się do 3×.<br>+9: <b>Zaćmienie</b> – podczas szału każdy cios to promień.',
+    from: 'Bossowie od poziomu 100 (0,5% szans)',
+  },
+};
 const SLOTS = {
   weapon: { n: 'Broń', e: '⚔️', t: 'click', base: .20, fmt: v => `+${Math.round(v * 100)}% obr. kliknięcia` },
   helmet: { n: 'Hełm', e: '⛑️', t: 'critC', base: .01, fmt: v => `+${(v * 100).toFixed(1)}% szansy kryt.` },
@@ -540,7 +563,7 @@ function defaultState() {
     chests: { common: 1, rare: 0 },
     artifacts: {}, seen: {}, achievements: {}, talents: {},
     stats: { clicks: 0, kills: 0, bosses: 0, prestiges: 0, chests: 0, golden: 0, frenzies: 0, crits: 0, skills: 0, upgrades: 0, legendary: 0, bestUp: 0 },
-    items: [], equip: { weapon: null, helmet: null, armor: null, boots: null, amulet: null }, stones: 0, starter: false,
+    items: [], equip: { weapon: null, helmet: null, armor: null, boots: null, amulet: null }, stones: 0, starter: false, uniques: {}, tester: false,
     boosts: { ad: 0, chest: 0, gold: 0, frenzy: 0, freeze: 0 },   // znaczniki czasu końca
     skillsReady: { meteor: 0, freeze: 0, gold: 0 },
     combo: 0,
@@ -785,6 +808,8 @@ function onTap(e) {
   const crit = Math.random() < critChance();
   if (crit) { d *= critMult(); S.stats.crits++; dprog('crits'); }
   if (S.boosts.frenzy > now) d *= 5;
+  if (R.god) d *= 1000;
+  sunCharge(now);
   const r = arena.getBoundingClientRect();
   const x = e.clientX - r.left, y = e.clientY - r.top;
   popText(x, y - 10, (crit ? '💥' : '') + fmt(d), crit ? 'crit' : '');
@@ -793,6 +818,30 @@ function onTap(e) {
   heroSwing(crit);
   slashFx(crit);
   vibrate(crit ? 25 : 10);
+  dealDamage(d);
+}
+const sunWeapon = () => { const w = equippedItem('weapon'); return w && w.u === 'sunblade' ? w : null; };
+function sunCharge(now) {
+  const w = sunWeapon(); if (!w) return;
+  if (w.l >= 9 && S.boosts.frenzy > now) { sunRay(w); return; }
+  R.sun = (R.sun || 0) + 1;
+  if (R.sun >= (w.l >= 6 ? 20 : 25)) { R.sun = 0; sunRay(w); }
+}
+function sunRay(w) {
+  const p = monsterCenter();
+  const d = clickDamage() * 10 * (S.boosts.frenzy > Date.now() ? 5 : 1) * (R.god ? 1000 : 1);
+  const ray = document.createElement('div');
+  ray.className = 'sunray'; ray.style.left = p.x + 'px'; ray.style.height = (p.y + 30) + 'px';
+  fx.appendChild(ray); setTimeout(() => ray.remove(), 500);
+  const app = $('app'); app.classList.remove('sunflash'); void app.offsetWidth; app.classList.add('sunflash');
+  popText(p.x, p.y - 60, '☀️' + fmt(d), 'big');
+  particles(p.x, p.y, 16, true);
+  if (w.l >= 3) {
+    const max = w.l >= 6 ? 3 : 1, now = Date.now();
+    const st = R.burn && R.burn.until > now ? Math.min(max, R.burn.st + 1) : 1;
+    R.burn = { until: now + 3000, st, dps: clickDamage() * 2 };
+  }
+  vibrate([20, 20, 60]);
   dealDamage(d);
 }
 function dealDamage(d) {
@@ -823,6 +872,7 @@ function kill() {
     const st = 1 + Math.floor(l / 50); S.stones += st;
     toast(`👑 Boss pokonany! ${rare ? '🎁 Rzadka skrzynka' : '📦 Skrzynka'} i +${st} 💠`, 'gold');
     if (Math.random() < 0.35) giveItem(rollItem([55, 27, 12, 5, 1]));
+    if (l >= 100 && !S.uniques.sunblade && Math.random() < 0.005) giveUnique('sunblade');
   }
   fragments(c.em);
   particles(p.x, p.y, 18, true);
@@ -982,6 +1032,19 @@ function newItem(slot, r, b, name) {
   if (name) it.n = name;
   return it;
 }
+function giveUnique(key, silent) {
+  if (S.uniques[key]) return null;
+  const u = UNIQUES[key], it = newItem(u.slot, 5, 'sword', u.name);
+  it.u = key; S.uniques[key] = true; S.items.push(it);
+  if (!silent) {
+    vibrate([80, 40, 80, 40, 200]);
+    showModal(`<h2>🏆 PRZEDMIOT 1/1!</h2><div class="bigIco uni myth"><span class="one">1/1</span><img class="uimg" src="${u.icon}" alt=""></div>
+      <div class="rname" style="color:#ffd700">${u.name}</div><div class="sub">Mityczny · jedyny egzemplarz w grze</div>
+      <p class="lore">${u.lore}</p><div class="power">${u.power}</div>
+      <button class="btn wide" data-act="equip" data-arg="${it.id}">Załóż od razu!</button><button class="btn ghost wide" data-act="closeModal">Później</button>`);
+  }
+  return it;
+}
 function rollItem(weights) { return newItem(pick(SLOT_ORDER), weighted(weights.map((w, i) => [i, w]))); }
 function giveItem(it, quiet) {
   if (it.r >= 4) S.stats.legendary++;
@@ -1001,7 +1064,7 @@ function upgradeCost(it) {
 
 /* --- Rysowanie bohatera (SVG z warstw: buty, zbroja, amulet, głowa, hełm, broń) --- */
 const GOLD = 'url(#goldG)', GOLD_D = '#7a4e0c', GEM = 'url(#gemG)';
-const isLeg = it => !!it && it.r === 4;
+const isLeg = it => !!it && it.r >= 4;
 const legendarySet = eq => SLOT_ORDER.every(k => isLeg(eq[k]));
 const legCount = eq => SLOT_ORDER.filter(k => isLeg(eq[k])).length;
 function flamePlume(x, y, n, sc) {   // płonąca grzywa
@@ -1020,6 +1083,12 @@ const glowF = l => l >= 9 ? 'url(#gl4)' : l >= 7 ? 'url(#gl3)' : l >= 5 ? 'url(#
 const fAttr = l => { const f = glowF(l); return f ? ` filter="${f}"` : ''; };
 const WEAPON_TIP = { legsword: -65, sword: -57, axe: -50, hammer: -58, spear: -76, staff: -67 };
 function weaponSVG(w, fx) {
+  if (w.u && UNIQUES[w.u]) {   // unikat: malowany obrazek w dłoni
+    let s = `<image href="${UNIQUES[w.u].img}" x="-15" y="-90" width="30" height="112"/>`;
+    if (fx && w.l >= 5) [[-10, -30], [9, -50], [-7, -66]].forEach((p, i) => { s += `<g transform="translate(${p[0]} ${p[1]})"><path class="spk" style="animation-delay:${i * .4}s" d="M0 -4 L1 -1 L4 0 L1 1 L0 4 L-1 1 L-4 0 L-1 -1Z" fill="#fff"/></g>`; });
+    if (fx && w.l >= 7) { let f = ''; for (let i = 0; i < (w.l >= 9 ? 5 : 3); i++) f += `<g transform="translate(${i % 2 ? 6 : -6} ${-20 - i * 12}) scale(1.1)"><path class="flm" style="animation-delay:${(i * .1).toFixed(1)}s" d="M0 0 C-5 -6 -4 -13 0 -20 C4 -13 5 -6 0 0Z" fill="url(#flameG)"/></g>`; s = f + s; }
+    return `<g${fAttr(Math.max(w.l, 3))}>${s}</g>`;
+  }
   const leg = isLeg(w), m = leg ? GOLD : METAL[w.r], c = leg ? '#38bdf8' : RARITY[w.r].c; let g;
   switch (leg && w.b === 'sword' ? 'legsword' : w.b) {
     case 'legsword': g = `<rect x="-2.2" y="0" width="4.4" height="12" rx="1.5" fill="#3b1f0a"/><path d="M-2.2 3 L2.2 5 M-2.2 7 L2.2 9" stroke="#f5c542" stroke-width="1"/><circle cx="0" cy="14" r="3" fill="${GEM}" stroke="${GOLD_D}" stroke-width=".8"/>
@@ -1129,6 +1198,7 @@ function heroSVG(eq, fx = true) {
   return s + '</svg>';
 }
 function itemIcon(it, fx = false) {
+  if (it.u && UNIQUES[it.u]) return `<img class="uimg" src="${UNIQUES[it.u].icon}" alt=""><span class="one">1/1</span>`;
   let vb, inner;
   switch (it.slot) {
     case 'weapon': vb = '-26 -82 52 98'; inner = weaponSVG(it, fx); break;
@@ -1169,14 +1239,16 @@ function slashFx(crit) {
 function showItemModal(id) {
   const it = itemById(id); if (!it) { closeModal(); return; }
   const sd = SLOTS[it.slot], eq = equippedItem(it.slot), isEq = !!eq && eq.id === it.id;
-  showModal(`<div class="bigIco">${itemIcon(it, true)}</div>
+  const U = it.u && UNIQUES[it.u];
+  showModal(`<div class="bigIco${U ? ' uni myth' : ''}">${itemIcon(it, true)}</div>
     <div class="rname" style="color:${RARITY[it.r].c}">${itemName(it)}${it.l ? ' +' + it.l : ''}</div>
+    ${U ? `<div class="sub">🏆 1/1 · jedyny egzemplarz w grze</div><p class="lore">${U.lore}</p><div class="power">${U.power}</div>` : ''}
     <div class="sub">${RARITY[it.r].n} · ${sd.n}</div>
     <div class="big" style="font-size:18px">${sd.fmt(itemValue(it))}</div>
     ${isEq ? '<p class="done-t">✓ Założony</p>' : `<p class="sub">Teraz założony: ${eq ? sd.fmt(itemValue(eq)) : 'nic'}</p>`}
     ${isEq ? `<button class="btn ghost wide" data-act="unequip" data-arg="${it.slot}">Zdejmij</button>` : `<button class="btn green wide" data-act="equip" data-arg="${it.id}">Załóż</button>`}
     ${it.l < MAX_UP ? `<button class="btn purple wide" data-act="upOpen" data-arg="${it.id}">🔨 Ulepsz (+${it.l} → +${it.l + 1})</button>` : '<p class="done-t">🔥 Maksymalny poziom +9</p>'}
-    ${isEq ? '' : `<button class="btn red wide" data-act="salvage" data-arg="${it.id}">Rozbierz (+${salvageValue(it)} 💠)</button>`}
+    ${isEq || U ? '' : `<button class="btn red wide" data-act="salvage" data-arg="${it.id}">Rozbierz (+${salvageValue(it)} 💠)</button>`}
     <button class="btn ghost wide" data-act="closeModal">Zamknij</button>`, { force: true });
 }
 function showUpgradeModal(id, res) {
@@ -1193,7 +1265,7 @@ function showUpgradeModal(id, res) {
       <button class="btn purple wide ${can ? '' : 'off'}" data-act="upDo" data-arg="${it.id}">🔨 Ulepsz do +${it.l + 1}</button>`;
   }
   const hint = it.slot === 'weapon' ? 'Wygląd broni: +3 blask · +5 iskry · +7 płomienie · +9 magiczny ogień, błyskawice i aura' : 'Od +3 przedmiot świeci, a +9 daje bohaterowi aurę.';
-  showModal(`<h2>🔨 Kowal</h2><div class="bigIco">${itemIcon(it, true)}</div>
+  showModal(`<h2>🔨 Kowal</h2><div class="bigIco${it.u ? ' uni myth' : ''}">${itemIcon(it, true)}</div>
     <div class="rname" style="color:${RARITY[it.r].c}">${itemName(it)} +${it.l}</div>
     ${res ? `<div class="upres ${res.ok ? 'ok' : 'bad'}">${res.ok ? '✨ Sukces! Teraz +' + it.l : '💥 Nieudane! Przedmiot bez zmian'}</div>` : ''}
     ${body}<p class="sub">${hint}</p>
@@ -1221,7 +1293,7 @@ function equipItem(id) {
 function unequip(slot) { S.equip[slot] = null; R.B = bonusAcc(); renderHero(); closeModal(); renderPanel(); }
 function salvageItem(id) {
   const i = S.items.findIndex(x => x.id === id); if (i < 0) return;
-  const it = S.items[i]; if (S.equip[it.slot] === id) return;
+  const it = S.items[i]; if (S.equip[it.slot] === id || it.u) return;
   const v = salvageValue(it); S.items.splice(i, 1); S.stones += v;
   closeModal(); toast(`🔨 Rozebrano na ${v} 💠`); renderPanel();
 }
@@ -1244,7 +1316,7 @@ function htmlHero() {
   <h3>Ekwipunek</h3>`;
   SLOT_ORDER.forEach(s => {
     const it = eq[s];
-    h += it ? `<div class="card row" data-act="item" data-arg="${it.id}"><div class="slotIco icell" style="--rc:${RARITY[it.r].c}">${itemIcon(it)}</div>
+    h += it ? `<div class="card row" data-act="item" data-arg="${it.id}"><div class="slotIco icell${it.r >= 5 ? ' myth' : ''}" style="--rc:${RARITY[it.r].c};position:relative">${itemIcon(it)}</div>
       <div class="grow"><b style="color:${RARITY[it.r].c}">${itemName(it)}${it.l ? ' +' + it.l : ''}</b><div class="sub">${SLOTS[s].n} · ${RARITY[it.r].n}</div><div class="sub">${SLOTS[s].fmt(itemValue(it))}</div></div>
       <button class="btn small purple" data-act="upOpen" data-arg="${it.id}">🔨</button></div>`
       : `<div class="card row" style="opacity:.6"><div class="slotIco icell" style="--rc:#555;display:flex;align-items:center;justify-content:center;font-size:26px">${SLOTS[s].e}</div>
@@ -1253,7 +1325,7 @@ function htmlHero() {
   const bag = S.items.slice().sort((a, b) => b.r - a.r || b.l - a.l);
   h += `<h3>🎒 Plecak (${S.items.length}/${BAG_MAX})</h3><div class="grid">` + bag.map(it => {
     const e = S.equip[it.slot] === it.id;
-    return `<div class="cell icell" style="--rc:${RARITY[it.r].c}" data-act="item" data-arg="${it.id}">${itemIcon(it)}${it.l ? `<span class="cl">+${it.l}</span>` : ''}${e ? '<span class="eqm">✓</span>' : ''}</div>`;
+    return `<div class="cell icell${it.r >= 5 ? ' myth' : ''}" style="--rc:${RARITY[it.r].c}" data-act="item" data-arg="${it.id}">${itemIcon(it)}${it.l ? `<span class="cl">+${it.l}</span>` : ''}${e ? '<span class="eqm">✓</span>' : ''}</div>`;
   }).join('') + `</div>
   <button class="btn ghost wide" data-act="salvageJunk">🔨 Rozbierz pospolite i niezwykłe (+0)</button>
   <h3>Rzadkości</h3><table class="tbl">${RARITY.map(r => `<tr><td style="color:${r.c};font-weight:800">${r.n}</td><td>×${r.m} bonusu</td></tr>`).join('')}</table>`;
@@ -1558,6 +1630,7 @@ function autoHit() {
   const crit = Math.random() < critChance();
   if (crit) d *= critMult();
   if (S.boosts.frenzy > Date.now()) d *= 5;
+  if (R.god) d *= 1000;
   R.autoVis = (R.autoVis || 0) + 1;
   if (R.tab === 'fight' && R.autoVis % 2 === 0) {
     const p = monsterCenter();
@@ -1656,6 +1729,7 @@ function htmlMore() {
     return `<h2>☰ Więcej</h2><div class="tiles">` + TILES.map(t => `<button class="tile" style="--t1:${t[4]};--t2:${t[5]}" data-act="more" data-arg="${t[0]}">
       ${dots[t[0]] ? '<span class="dot"></span>' : ''}<span class="ti">${t[1]}</span><b>${t[2]}</b><small>${t[3]}</small></button>`).join('') + `</div>`;
   }
+  if (S.tester) TILES.push(['tester', '🧪', 'Panel testera', 'Narzędzia do testów', '#0891b2', '#164e63']);
   const cur = TILES.find(t => t[0] === s) || TILES[0];
   let h = `<div class="backbar"><button data-act="more" data-arg="home">←</button><h2>${cur[1]} ${cur[2]}</h2></div>`;
 
@@ -1742,17 +1816,59 @@ function htmlMore() {
     h += `<h3>🎨 Twoje skórki</h3>` + (owned.length ? owned.map(k => `<div class="card row"><div class="grow"><b>${SKIN_NAMES[k] || k}</b></div>
       <button class="btn small ${S.skin === k ? 'ghost' : ''}" data-act="skin" data-arg="${k}">${S.skin === k ? 'Zdejmij' : 'Załóż'}</button></div>`).join('') : '<p class="sub">Jeszcze nie masz żadnych skórek.</p>');
   }
+  else if (s === 'tester') {
+    const T = (a, l, c = 'ghost') => `<button class="btn small ${c}" data-act="t" data-arg="${a}">${l}</button>`;
+    h += `<p class="sub" style="margin-bottom:10px">Narzędzia do testowania. Zmieniają Twój zapis gry.</p>
+    <h3>💰 Zasoby</h3><div class="tgrid">${T('coins', '+🪙 dużo monet')}${T('gems', '+1000 💎')}${T('stones', '+100 💠')}${T('crystals', '+10 🔮')}${T('chests', '+5 📦 +5 🎁')}${T('cards', '+10 kart 🃏')}${T('candy', '+100 🍬')}${T('eventcur', 'Reset dnia (zadania, koło)')}</div>
+    <h3>⚔️ Przedmioty</h3><div class="tgrid">${RARITY.slice(0, 5).map((r, i) => T('item' + i, `<span style="color:${r.c}">${r.n}</span>`)).join('')}${T('sun', '🏆 Ostrze 1/1', 'purple')}${T('wup', 'Broń +1')}${T('legset', '👑 Legendarny komplet')}${T('clearbag', '🗑️ Wyczyść plecak')}</div>
+    <h3>👹 Walka</h3><div class="tgrid">${T('kill', 'Zabij potwora')}${T('boss', 'Następny boss')}${T('lvl10', 'Poziom +10')}${T('lvl100', 'Poziom +100')}${T('lvlm10', 'Poziom −10')}${T('frenzy', '🔥 Szał teraz')}${T('golden', '💰 Złoty skarb')}${T('cd', 'Odnów umiejętności')}${T('offline', '😴 Test offline 2 h')}${T('god', R.god ? '🧪 ×1000 WŁ.' : '🧪 ×1000 obrażeń', R.god ? 'green' : 'ghost')}</div>
+    <button class="btn red wide" data-act="t" data-arg="off">Ukryj panel testera</button>`;
+  }
   else if (s === 'settings') {
     h += `
     <div class="card row"><div class="grow"><b>📳 Wibracje</b><div class="sub">Nie działają na iPhone (ograniczenie Safari)</div></div>
     <button class="btn small ${S.settings.vibrate ? 'green' : 'ghost'}" data-act="toggleVib">${S.settings.vibrate ? 'Wł.' : 'Wył.'}</button></div>
-    <div class="card"><b>🔄 Aktualizacje</b><div class="sub">Wersja gry: ${GAME_VERSION}. Gra sama sprawdza aktualizacje, a postęp zostaje zachowany.</div>
+    <div class="card" data-act="verTap"><b>🔄 Aktualizacje</b><div class="sub">Wersja gry: ${GAME_VERSION}. Gra sama sprawdza aktualizacje, a postęp zostaje zachowany.</div>
     <button class="btn wide" data-act="checkUpd">Sprawdź aktualizacje</button></div>
     <div class="card"><b>💾 Przenoszenie zapisu</b><div class="sub">Skopiuj kod, by przenieść grę na inne urządzenie.</div>
     <div class="row" style="margin-top:8px"><button class="btn ghost grow" data-act="exportSave">Eksportuj</button><button class="btn ghost grow" data-act="importSave">Importuj</button></div></div>
+    ${S.tester ? '<button class="btn purple wide" data-act="more" data-arg="tester" style="margin-bottom:10px">🧪 Panel testera</button>' : ''}
     <div class="card"><b>🗑️ Reset gry</b><div class="sub">Usuwa cały postęp bezpowrotnie.</div><button class="btn red wide" data-act="resetSave">Zresetuj grę</button></div>`;
   }
   return h;
+}
+
+/* --- Panel testera --- */
+function testerAct(a) {
+  const now = Date.now(), lvl = n => { S.level = Math.max(1, n); S.maxLevelRun = Math.max(S.maxLevelRun, S.level); S.maxLevelEver = Math.max(S.maxLevelEver, S.level); R.dying = false; spawnMonster(); };
+  switch (a) {
+    case 'coins': S.coins += Math.max(1e4, baseCoin(S.level) * 1000); break;
+    case 'gems': S.gems += 1000; break;
+    case 'stones': S.stones += 100; break;
+    case 'crystals': S.crystals += 10; S.crystalsTotal += 10; break;
+    case 'chests': S.chests.common += 5; S.chests.rare += 5; break;
+    case 'cards': S.cards = S.cards.map(c => c + 10); break;
+    case 'candy': S.event.cur += 100; break;
+    case 'eventcur': S.daily.date = ''; S.login.last = ''; break;
+    case 'sun': if (S.uniques.sunblade) { toast('Masz już Ostrze – to unikat 1/1'); return; } giveUnique('sunblade'); break;
+    case 'wup': { const w = equippedItem('weapon'); if (w) w.l = Math.min(MAX_UP, w.l + 1); break; }
+    case 'legset': SLOT_ORDER.forEach(sl => { const it = newItem(sl, 4); S.items.push(it); S.equip[sl] = it.id; }); break;
+    case 'clearbag': S.items = S.items.filter(it => it.u || Object.values(S.equip).includes(it.id)); break;
+    case 'kill': if (!R.dying) dealDamage(S.hp + 1); break;
+    case 'boss': lvl(Math.ceil((S.level + 1) / 10) * 10); break;
+    case 'lvl10': lvl(S.level + 10); break;
+    case 'lvl100': lvl(S.level + 100); break;
+    case 'lvlm10': lvl(S.level - 10); break;
+    case 'frenzy': startFrenzy(); break;
+    case 'golden': S.nextGolden = 1; setTab('fight'); break;
+    case 'cd': for (const k in S.skillsReady) S.skillsReady[k] = 0; break;
+    case 'offline': S.lastSeen = now - 2 * 3600e3; checkOffline(); break;
+    case 'god': R.god = !R.god; break;
+    case 'off': S.tester = false; R.god = false; R.verTaps = 0; R.moreSub = 'settings'; break;
+    default: if (a.startsWith('item')) giveItem(newItem(pick(SLOT_ORDER), +a.slice(4)));
+  }
+  if (a.startsWith('item') === false && !['sun', 'golden', 'offline'].includes(a)) toast('🧪 Zrobione');
+  R.B = bonusAcc(); renderHero(); renderPanel();
 }
 
 /* =========================================================
@@ -1848,6 +1964,13 @@ const ACTIONS = {
   shopDo: a => shopDo(a),
   autoToggle: () => { S.shop.autoOn = !S.shop.autoOn; toast(S.shop.autoOn ? '🤖 Autoclicker włączony' : '⏸️ Autoclicker wyłączony'); renderPanel(); },
   skin: a => { S.skin = S.skin === a ? '' : a; applySkin(); renderPanel(); },
+  verTap: () => {
+    if (S.tester) return;
+    R.verTaps = (R.verTaps || 0) + 1;
+    if (R.verTaps >= 5) { S.tester = true; toast('🧪 Panel testera odblokowany!', 'gold'); renderPanel(); }
+    else if (R.verTaps >= 2) toast(`🧪 Jeszcze ${5 - R.verTaps}…`);
+  },
+  t: a => testerAct(a),
   toggleVib: () => { S.settings.vibrate = !S.settings.vibrate; renderPanel(); vibrate(30); },
   checkUpd: () => checkUpdate(true), doUpdate,
   closeModal: () => closeModal(),
@@ -1938,6 +2061,10 @@ function updateFightUI(now) {
   if ((S.boosts.shopDmg || 0) > now) chips.push(`🛒 ×2 obr. ${fmtTime((S.boosts.shopDmg - now) / 1000)}`);
   if ((S.boosts.shopCoin || 0) > now) chips.push(`🛒 ×2 monety ${fmtTime((S.boosts.shopCoin - now) / 1000)}`);
   if (dps > 0) chips.push(`⚔️ DPS ${fmt(dps)}`);
+  const sw = sunWeapon();
+  if (sw) chips.push(sw.l >= 9 && S.boosts.frenzy > now ? '☀️ ZAĆMIENIE!' : `☀️ ${R.sun || 0}/${sw.l >= 6 ? 20 : 25}`);
+  if (R.burn && R.burn.until > now) chips.push(`🔥 Podpalenie ×${R.burn.st}`);
+  if (R.god) chips.push('🧪 ×1000');
   const ch = chips.map(c => `<span class="bchip">${c}</span>`).join('') + (autoRate() ? `<span class="bchip btnchip" data-act="autoToggle">🤖 ${S.shop.autoOn ? autoRate() + '/s' : 'wył.'}</span>` : '');
   const bx = $('boosts'); if (bx._h !== ch) { bx._h = ch; bx.innerHTML = ch; }
   // Pasek do następnego ulepszenia
@@ -1980,6 +2107,13 @@ function tick() {
       if (S.boosts.freeze <= now) S.bossLeft -= dt;
       if (S.bossLeft <= 0) bossFail();
     }
+  }
+  // Podpalenie z Ostrza Pożeracza Słońc
+  if (R.burn && R.burn.until > now && !R.dying && R.cur) {
+    const bd = R.burn.dps * R.burn.st * dt;
+    S.hp -= bd; R.burnAcc = (R.burnAcc || 0) + bd;
+    if (t - (R.lastBurnPop || 0) > 700) { R.lastBurnPop = t; const p = monsterCenter(); popText(p.x + rand(-30, 30), p.y + rand(-20, 30), '🔥' + fmt(R.burnAcc), 'crit'); R.burnAcc = 0; }
+    if (S.hp <= 0) { S.hp = 0; kill(); }
   }
   // Autoclicker ze sklepu
   if (autoRate() && S.shop.autoOn && !R.dying && R.cur && !R.modalOpen) {
