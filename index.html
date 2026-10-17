@@ -68,8 +68,8 @@ main{flex:1;position:relative;overflow:hidden}
 #nextFill{background:linear-gradient(90deg,#facc15,#f59e0b)}
 #arena{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:170px;touch-action:none}
 #deco{position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:38px;opacity:.28;pointer-events:none;letter-spacing:6px}
-#monster{font-size:min(38vw,165px);line-height:1;filter:drop-shadow(0 10px 12px rgba(0,0,0,.55));position:relative;pointer-events:none}
-#monster.boss{font-size:min(46vw,205px)}
+#monster{font-size:min(33vw,145px);margin-left:34%;line-height:1;filter:drop-shadow(0 10px 12px rgba(0,0,0,.55));position:relative;pointer-events:none}
+#monster.boss{font-size:min(40vw,175px)}
 #monster.boss::before{content:'';position:absolute;inset:-12%;border-radius:50%;background:radial-gradient(circle,rgba(255,40,80,.45),transparent 65%);animation:pulse 1s ease-in-out infinite alternate;z-index:-1}
 #monster.frozen #monsterEmoji{filter:brightness(1.3) saturate(.3) drop-shadow(0 0 14px #7dd3fc)!important}
 #monsterEmoji{display:inline-block;animation:bob 2.2s ease-in-out infinite}
@@ -188,6 +188,36 @@ h3{font-size:16px;margin:12px 0 8px}
 #wheelPtr{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:30px;z-index:2;filter:drop-shadow(0 2px 2px #000)}
 #wheelHub{position:absolute;inset:40%;background:#1a1438;border:4px solid #ffd84d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
 
+/* Bohater i przedmioty */
+#hero{position:absolute;left:0;bottom:3%;width:38%;max-width:160px;aspect-ratio:130/160;pointer-events:none;z-index:2}
+#hero .herosvg{animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{50%{transform:translateY(-2px)}}
+.herosvg{width:100%;height:100%;overflow:visible;display:block}
+.flm{transform-box:fill-box;transform-origin:50% 100%;animation:flick .3s ease-in-out infinite alternate}
+@keyframes flick{from{transform:scale(1,1);opacity:.95}to{transform:scale(.75,1.3);opacity:.6}}
+.spk{transform-box:fill-box;transform-origin:center;animation:twk 1.3s ease-in-out infinite}
+@keyframes twk{0%,100%{transform:scale(.1);opacity:0}50%{transform:scale(1);opacity:1}}
+.bolt{animation:blink 1.1s steps(1) infinite}
+@keyframes blink{0%,55%{opacity:0}60%,75%{opacity:1}80%,100%{opacity:0}}
+.aura{transform-box:fill-box;transform-origin:center;animation:auraP 1.4s ease-in-out infinite alternate}
+@keyframes auraP{to{transform:scale(1.1);opacity:.6}}
+.slash{position:absolute;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;border-top:6px solid var(--sc,#fff);pointer-events:none;animation:slash .25s ease-out forwards;z-index:3;filter:drop-shadow(0 0 6px var(--sc,#fff))}
+.slash.crit{width:150px;height:150px;margin:-75px 0 0 -75px;border-top-width:9px}
+@keyframes slash{from{transform:rotate(-60deg) scale(.6);opacity:1}to{transform:rotate(80deg) scale(1.1);opacity:0}}
+.heroPrev{height:210px;display:flex;justify-content:center;margin:4px 0 8px}
+.heroPrev .herosvg{width:auto;height:100%}
+.iico{width:100%;height:100%;display:block}
+.icell{border:2px solid var(--rc);background:radial-gradient(circle,color-mix(in srgb,var(--rc) 28%,transparent),var(--card2) 72%)}
+.icell .cl{color:#fff;text-shadow:0 1px 2px #000}
+.icell .eqm{position:absolute;bottom:2px;left:4px;font-size:10px;font-weight:900;color:var(--good)}
+.slotIco{width:54px;height:54px;border-radius:12px;flex-shrink:0;padding:3px}
+.bigIco{width:110px;height:130px;margin:6px auto}
+.rname{font-weight:900;font-size:18px}
+.upres{font-weight:900;font-size:18px;margin:6px 0}
+.upres.ok{color:#4ade80;animation:pop .3s}
+.upres.bad{color:#f87171;animation:cshake .5s}
+#nav button{font-size:10px}
+
 /* Skórki wydarzeń */
 #app.skin-pumpkin{--acc:#ff8c1a}
 #app.skin-pumpkin #arena::before{content:'';position:absolute;inset:5%;background:radial-gradient(circle,rgba(255,120,0,.4),transparent 65%);pointer-events:none}
@@ -217,6 +247,7 @@ h3{font-size:16px;margin:12px 0 8px}
       <div class="bar hidden" id="bossBar"><div id="bossFill"></div><span id="bossTxt"></span></div>
       <div id="arena">
         <div id="deco"></div>
+        <div id="hero"></div>
         <div id="monster"><span id="monsterEmoji">🐛</span></div>
         <div id="fx"></div>
       </div>
@@ -230,6 +261,7 @@ h3{font-size:16px;margin:12px 0 8px}
       <div class="bar" id="nextUp" data-act="tab" data-arg="upgrades"><div id="nextFill" style="width:0"></div><span id="nextTxt"></span></div>
     </section>
 
+    <section id="tab-hero" class="tab panel"></section>
     <section id="tab-upgrades" class="tab panel"></section>
     <section id="tab-chests" class="tab panel"></section>
     <section id="tab-collection" class="tab panel"></section>
@@ -239,6 +271,7 @@ h3{font-size:16px;margin:12px 0 8px}
   <!-- Dolne zakładki -->
   <nav id="nav">
     <button data-act="tab" data-arg="fight" class="on"><i>⚔️</i>Walka</button>
+    <button data-act="tab" data-arg="hero"><i>🗡️</i>Bohater</button>
     <button data-act="tab" data-arg="upgrades"><i>⬆️</i>Ulepszenia<span class="dot hidden" id="dot-upgrades"></span></button>
     <button data-act="tab" data-arg="chests"><i>📦</i>Skrzynki<span class="dot hidden" id="dot-chests"></span></button>
     <button data-act="tab" data-arg="collection"><i>📖</i>Kolekcja</button>
@@ -246,6 +279,16 @@ h3{font-size:16px;margin:12px 0 8px}
   </nav>
 </div>
 <div id="toasts"></div>
+<!-- Wspólne efekty SVG (blask, płomienie, aura) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="gl1" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="gl2" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="gl3" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="gl4" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <radialGradient id="auraG"><stop offset="0" stop-color="#ffd27a" stop-opacity=".7"/><stop offset=".6" stop-color="#ff7a1a" stop-opacity=".3"/><stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/></radialGradient>
+  <linearGradient id="flameG" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff3d00"/><stop offset=".55" stop-color="#ff9100"/><stop offset="1" stop-color="#ffe082"/></linearGradient>
+  <linearGradient id="flame9G" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#7c3aed"/><stop offset=".5" stop-color="#38bdf8"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+</defs></svg>
 <div id="modal" class="hidden"><div class="mbox" id="modalBox"></div></div>
 
 <script>
@@ -255,7 +298,7 @@ h3{font-size:16px;margin:12px 0 8px}
    Zmień GAME_VERSION przy każdej aktualizacji na GitHubie –
    gracze zobaczą pasek „Aktualizuj”, a postęp zostanie zachowany.
    ========================================================= */
-const GAME_VERSION = '1.0.1';
+const GAME_VERSION = '1.1.0';
 const SAVE_KEY = 'monsterTap_save_v1';
 
 const $ = id => document.getElementById(id);
@@ -335,6 +378,9 @@ const ARTIFACTS = [
 
 // b = [typ bonusu, wartość]
 const ACHIEVEMENTS = [
+  { id: 'it1', name: 'Legendarny łup', desc: 'Zdobądź legendarny przedmiot', cond: s => s.stats.legendary >= 1, b: ['dmg', .05], bd: '+5% obrażeń', gems: 30 },
+  { id: 'up1', name: 'Kowal', desc: 'Ulepsz przedmioty 10 razy', cond: s => s.stats.upgrades >= 10, b: ['coin', .05], bd: '+5% monet', gems: 15 },
+  { id: 'up9', name: 'Mistrz kowalstwa', desc: 'Ulepsz przedmiot do +9', cond: s => s.stats.bestUp >= 9, b: ['click', .10], bd: '+10% obr. kliknięcia', gems: 60 },
   { id: 'c1', name: 'Rozgrzewka', desc: '1 000 kliknięć', cond: s => s.stats.clicks >= 1000, b: ['dmg', .02], bd: '+2% obrażeń', gems: 10 },
   { id: 'c2', name: 'Klikacz', desc: '10 000 kliknięć', cond: s => s.stats.clicks >= 1e4, b: ['dmg', .03], bd: '+3% obrażeń', gems: 25 },
   { id: 'c3', name: 'Legenda palca', desc: '100 000 kliknięć', cond: s => s.stats.clicks >= 1e5, b: ['dmg', .05], bd: '+5% obrażeń', gems: 60 },
@@ -373,6 +419,7 @@ const QUEST_POOL = [
   { t: 'golden', txt: 'Złap złoty skarb', n: [1, 1] },
   { t: 'frenzy', txt: 'Wejdź w SZAŁ {n} razy', n: [3, 5] },
   { t: 'crits', txt: 'Zadaj {n} krytyków', n: [100, 250] },
+  { t: 'upgrade', txt: 'Ulepsz przedmiot {n} razy', n: [1, 3] },
 ];
 
 const LOGIN_REWARDS = [
@@ -386,10 +433,10 @@ const LOGIN_REWARDS = [
 ];
 
 const CHESTS = {
-  common: { name: 'Zwykła skrzynka', e: '📦', drops: [['coins', 45], ['boost', 15], ['card', 30], ['artifact', 10]], price: 20 },
-  rare: { name: 'Rzadka skrzynka', e: '🎁', drops: [['coins', 25], ['boost', 20], ['card', 35], ['artifact', 20]], price: 60 },
+  common: { name: 'Zwykła skrzynka', e: '📦', drops: [['coins', 35], ['boost', 15], ['card', 25], ['artifact', 10], ['item', 15]], price: 20 },
+  rare: { name: 'Rzadka skrzynka', e: '🎁', drops: [['coins', 15], ['boost', 15], ['card', 30], ['artifact', 20], ['item', 20]], price: 60 },
 };
-const DROP_NAMES = { coins: '🪙 Monety', boost: '⚡ Boost ×3 (60 s)', card: '🃏 Karty pomocników', artifact: '🏺 Artefakt' };
+const DROP_NAMES = { coins: '🪙 Monety', boost: '⚡ Boost ×3 (60 s)', card: '🃏 Karty pomocników', artifact: '🏺 Artefakt', item: '⚔️ Przedmiot bohatera' };
 
 const WHEEL = [
   { l: '🪙', d: 'Monety (2 min zarobków)', w: 25, col: '#7c3aed' },
@@ -402,6 +449,33 @@ const WHEEL = [
   { l: '🔮', d: '1 kryształ', w: 1, col: '#9333ea' },
 ];
 
+/* Przedmioty bohatera */
+const RARITY = [
+  { n: 'Pospolity', c: '#9ca3af', m: 1, salv: 1 },
+  { n: 'Niezwykły', c: '#4ade80', m: 1.6, salv: 2 },
+  { n: 'Rzadki', c: '#60a5fa', m: 2.5, salv: 4 },
+  { n: 'Epicki', c: '#c084fc', m: 4, salv: 8 },
+  { n: 'Legendarny', c: '#fb923c', m: 7, salv: 16 },
+];
+const METAL = ['#c9ced8', '#b9f5cc', '#a9d2ff', '#e2c6ff', '#ffd29a'];
+const SLOTS = {
+  weapon: { n: 'Broń', e: '⚔️', t: 'click', base: .20, fmt: v => `+${Math.round(v * 100)}% obr. kliknięcia` },
+  helmet: { n: 'Hełm', e: '⛑️', t: 'critC', base: .01, fmt: v => `+${(v * 100).toFixed(1)}% szansy kryt.` },
+  armor: { n: 'Zbroja', e: '🛡️', t: 'dmg', base: .10, fmt: v => `+${Math.round(v * 100)}% wszystkich obrażeń` },
+  boots: { n: 'Buty', e: '👢', t: 'coin', base: .10, fmt: v => `+${Math.round(v * 100)}% monet` },
+  amulet: { n: 'Amulet', e: '📿', t: 'critM', base: .20, fmt: v => `+${v.toFixed(2)} mnożnika kryt.` },
+};
+const SLOT_ORDER = ['weapon', 'helmet', 'armor', 'boots', 'amulet'];
+const BASES = {
+  weapon: [['sword', 'Miecz'], ['axe', 'Topór'], ['hammer', 'Młot'], ['spear', 'Włócznia'], ['staff', 'Kostur']],
+  helmet: [['cap', 'Hełm'], ['horned', 'Rogaty hełm'], ['crown', 'Korona']],
+  armor: [['plate', 'Zbroja płytowa'], ['robe', 'Szata maga']],
+  boots: [['boots', 'Buty']],
+  amulet: [['amulet', 'Amulet']],
+};
+const UP_CHANCE = [1, 1, 1, 1, 1, 1, .8, .65, .5, .35];   // szansa na ulepszenie z +N na +N+1
+const MAX_UP = 9, BAG_MAX = 40;
+
 const SKILLS = {
   meteor: { name: 'Deszcz meteorów', cd: 300 },
   freeze: { name: 'Zamrożenie', cd: 600 },
@@ -412,9 +486,11 @@ const SKILLS = {
 const EVENTS = [
   { key: 'halloween', month: 9, name: 'Halloween', e: '🎃', cur: '🍬', curName: 'Cukierki',
     mons: [['🎃', 'Dyniogłów'], ['👻', 'Upiorek'], ['🦇', 'Wampirek'], ['💀', 'Szkieletor'], ['🧟', 'Zombiak'], ['🕸️', 'Pajęczyniak']],
+    helm: { b: 'pumpkin', name: 'Dyniowy hełm', cost: 60 },
     skin: 'pumpkin', skinName: 'Dyniowy motyw', skinD: 'Pomarańczowy wygląd, dyniowe cząsteczki, +5% monet', skinCost: 100 },
   { key: 'xmas', month: 11, name: 'Święta', e: '🎄', cur: '🍪', curName: 'Pierniki',
     mons: [['⛄', 'Zły bałwan'], ['🎅', 'Fałszywy Mikołaj'], ['🦌', 'Renifer'], ['🎁', 'Mimik-prezent'], ['🍪', 'Piernikowy ludek']],
+    helm: { b: 'santa', name: 'Czapka Mikołaja', cost: 60 },
     skin: 'winter', skinName: 'Zimowy motyw', skinD: 'Śnieżny wygląd, +5% obrażeń', skinCost: 100 },
 ];
 const SKIN_NAMES = { pumpkin: '🎃 Dyniowy motyw', winter: '❄️ Zimowy motyw' };
@@ -430,7 +506,8 @@ function defaultState() {
     helpers: [0, 0, 0, 0, 0], cards: [0, 0, 0, 0, 0], stars: [0, 0, 0, 0, 0],
     chests: { common: 1, rare: 0 },
     artifacts: {}, seen: {}, achievements: {}, talents: {},
-    stats: { clicks: 0, kills: 0, bosses: 0, prestiges: 0, chests: 0, golden: 0, frenzies: 0, crits: 0, skills: 0 },
+    stats: { clicks: 0, kills: 0, bosses: 0, prestiges: 0, chests: 0, golden: 0, frenzies: 0, crits: 0, skills: 0, upgrades: 0, legendary: 0, bestUp: 0 },
+    items: [], equip: { weapon: null, helmet: null, armor: null, boots: null, amulet: null }, stones: 0, starter: false,
     boosts: { ad: 0, chest: 0, gold: 0, frenzy: 0, freeze: 0 },   // znaczniki czasu końca
     skillsReady: { meteor: 0, freeze: 0, gold: 0 },
     combo: 0,
@@ -497,6 +574,7 @@ function bonusAcc() {
   for (const x of ACHIEVEMENTS) if (S.achievements[x.id]) add(x.b[0], x.b[1]);
   for (const t of TALENTS) { const l = S.talents[t.id] || 0; if (l) t.fx.forEach(f => add(f[0], f[1] * l)); }
   for (const ar of ARTIFACTS) { const l = S.artifacts[ar.id] || 0; if (l) add(ar.t, ar.v * l); }
+  for (const sl of SLOT_ORDER) { const it = equippedItem(sl); if (it) add(SLOTS[sl].t, itemValue(it)); }
   for (let w = 0; w < WORLDS.length; w++) if (worldComplete(w)) { add('dmg', .10); add('coin', .10); }
   if (Object.keys(S.artifacts).length >= ARTIFACTS.length) add('dmg', .25);
   if (S.skins.pumpkin) add('coin', .05);
@@ -582,7 +660,7 @@ function particles(x, y, n, big) {
 }
 // Potwór „rozpada się” na kawałki
 function fragments(emoji) {
-  const r = arena.getBoundingClientRect(), x = r.width / 2, y = r.height / 2;
+  const c = monsterCenter(), x = c.x, y = c.y;
   for (let i = 0; i < 7; i++) {
     const p = document.createElement('div');
     const ang = Math.random() * Math.PI * 2, dist = rand(70, 150);
@@ -611,6 +689,10 @@ function coinBurst(cx, cy, n) {
     setTimeout(() => c.remove(), 1000 + i * 35);
   }
   setTimeout(() => { try { $('coinsBox').animate([{ transform: 'scale(1)' }, { transform: 'scale(1.15)' }, { transform: 'scale(1)' }], { duration: 250 }); } catch (e) { } }, 850);
+}
+function monsterCenter() {
+  const a = arena.getBoundingClientRect(), m = monsterEl.getBoundingClientRect();
+  return { x: m.left - a.left + m.width / 2, y: m.top - a.top + m.height / 2, cx: m.left + m.width / 2, cy: m.top + m.height / 2 };
 }
 function shake() {
   try {
@@ -671,6 +753,8 @@ function onTap(e) {
   popText(x, y - 10, (crit ? '💥' : '') + fmt(d), crit ? 'crit' : '');
   particles(x, y, crit ? 10 : 5);
   shake();
+  heroSwing(crit);
+  slashFx(crit);
   vibrate(crit ? 25 : 10);
   dealDamage(d);
 }
@@ -694,17 +778,19 @@ function kill() {
   S.stats.kills++; dprog('kills');
   const E = currentEvent();
   if (c.ev && E) { S.event.cur += 1; }
-  const r = arena.getBoundingClientRect();
+  const p = monsterCenter();
   if (c.boss) {
     S.stats.bosses++; dprog('boss');
     const rare = Math.random() < 0.15;
     S.chests[rare ? 'rare' : 'common']++;
-    toast(`👑 Boss pokonany! Zdobywasz ${rare ? '🎁 rzadką' : '📦'} skrzynkę`, 'gold');
+    const st = 1 + Math.floor(l / 50); S.stones += st;
+    toast(`👑 Boss pokonany! ${rare ? '🎁 Rzadka skrzynka' : '📦 Skrzynka'} i +${st} 💠`, 'gold');
+    if (Math.random() < 0.35) giveItem(rollItem([55, 27, 12, 5, 1]));
   }
   fragments(c.em);
-  particles(r.width / 2, r.height / 2, 18, true);
-  popText(r.width / 2, r.height / 2 - 40, '+' + fmt(coins) + ' 🪙' + (c.ev && E ? ' +1' + E.cur : ''), 'coin');
-  coinBurst(r.left + r.width / 2, r.top + r.height / 2, c.boss ? 12 : 6);
+  particles(p.x, p.y, 18, true);
+  popText(p.x, p.y - 40, '+' + fmt(coins) + ' 🪙' + (c.ev && E ? ' +1' + E.cur : ''), 'coin');
+  coinBurst(p.cx, p.cy, c.boss ? 12 : 6);
   restartAnim(monsterEl, 'dying');
   vibrate(c.boss ? [60, 40, 60] : 35);
   S.level++;
@@ -738,17 +824,17 @@ function useSkill(id) {
   if (R.dying) { toast('Poczekaj na nowego potwora'); return; }
   if (id === 'meteor') {
     const d = clickDamage() * 50;
-    const r = arena.getBoundingClientRect();
+    const r = monsterCenter();
     for (let i = 0; i < 5; i++) {
       const m = document.createElement('div');
       m.className = 'meteor'; m.textContent = '☄️';
-      m.style.left = (r.width / 2 - 22 + rand(-50, 50)) + 'px'; m.style.top = (r.height / 2 - 22 + rand(-30, 30)) + 'px';
+      m.style.left = (r.x - 22 + rand(-40, 40)) + 'px'; m.style.top = (r.y - 22 + rand(-30, 30)) + 'px';
       m.style.animationDelay = (i * 60) + 'ms';
       fx.appendChild(m); setTimeout(() => m.remove(), 800);
     }
     setTimeout(() => {
-      popText(r.width / 2, r.height / 2 - 30, '☄️' + fmt(d), 'big');
-      particles(r.width / 2, r.height / 2, 20, true); shake(); vibrate([40, 20, 80]);
+      popText(r.x, r.y - 30, '☄️' + fmt(d), 'big');
+      particles(r.x, r.y, 20, true); shake(); vibrate([40, 20, 80]);
       dealDamage(d);
     }, 450);
   } else if (id === 'freeze') {
@@ -846,10 +932,255 @@ function mergeCards(i) {
 }
 
 /* =========================================================
+   8b. BOHATER I PRZEDMIOTY (rzadkości, ulepszanie +0…+9, wygląd)
+   ========================================================= */
+const itemById = id => S.items.find(i => i.id === id);
+const equippedItem = slot => S.equip[slot] ? itemById(S.equip[slot]) || null : null;
+function equippedAll() { const o = {}; SLOT_ORDER.forEach(s => o[s] = equippedItem(s)); return o; }
+const itemValue = it => SLOTS[it.slot].base * RARITY[it.r].m * (1 + 0.15 * it.l);
+const itemName = it => it.n || (BASES[it.slot].find(b => b[0] === it.b) || ['', SLOTS[it.slot].n])[1];
+const salvageValue = it => RARITY[it.r].salv * (1 + it.l);
+function newItem(slot, r, b, name) {
+  const it = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), slot, r, b: b || pick(BASES[slot])[0], l: 0 };
+  if (name) it.n = name;
+  return it;
+}
+function rollItem(weights) { return newItem(pick(SLOT_ORDER), weighted(weights.map((w, i) => [i, w]))); }
+function giveItem(it, quiet) {
+  if (it.r >= 4) S.stats.legendary++;
+  const label = `<span style="color:${RARITY[it.r].c}">${RARITY[it.r].n}: ${itemName(it)}</span>`;
+  if (S.items.length >= BAG_MAX) {
+    const v = salvageValue(it); S.stones += v;
+    toast(`🎒 Plecak pełny – ${label} rozebrany na ${v} 💠`);
+    return label;
+  }
+  S.items.push(it);
+  if (!quiet) toast(`${SLOTS[it.slot].e} Nowy przedmiot: <b>${label}</b>`, it.r >= 3 ? 'gold' : '');
+  return label;
+}
+function upgradeCost(it) {
+  return { stones: (it.l + 1) * (it.r + 1), coins: Math.max(50, baseCoin(Math.max(1, S.maxLevelRun - 5)) * 2) * (it.l + 1) };
+}
+
+/* --- Rysowanie bohatera (SVG z warstw: buty, zbroja, amulet, głowa, hełm, broń) --- */
+const glowF = l => l >= 9 ? 'url(#gl4)' : l >= 7 ? 'url(#gl3)' : l >= 5 ? 'url(#gl2)' : l >= 3 ? 'url(#gl1)' : '';
+const fAttr = l => { const f = glowF(l); return f ? ` filter="${f}"` : ''; };
+const WEAPON_TIP = { sword: -57, axe: -50, hammer: -58, spear: -76, staff: -67 };
+function weaponSVG(w, fx) {
+  const m = METAL[w.r], c = RARITY[w.r].c; let g;
+  switch (w.b) {
+    case 'axe': g = `<rect x="-2" y="-52" width="4" height="64" rx="2" fill="#6b4423"/><path d="M2 -50 Q24 -46 20 -26 Q12 -32 2 -32Z" fill="${m}" stroke="${c}" stroke-width="1.2"/><path d="M-2 -48 Q-12 -44 -10 -34 Q-6 -37 -2 -36Z" fill="${m}" stroke="${c}" stroke-width="1"/>`; break;
+    case 'hammer': g = `<rect x="-2" y="-46" width="4" height="58" rx="2" fill="#6b4423"/><rect x="-13" y="-58" width="26" height="14" rx="3" fill="${m}" stroke="${c}" stroke-width="1.4"/><rect x="-13" y="-53" width="26" height="3" fill="${c}"/>`; break;
+    case 'spear': g = `<rect x="-1.6" y="-62" width="3.2" height="76" rx="1.5" fill="#7a5230"/><path d="M-5 -61 L5 -61 L0 -76Z" fill="${m}" stroke="${c}" stroke-width="1"/><rect x="-4" y="-62" width="8" height="3" fill="${c}"/>`; break;
+    case 'staff': g = `<rect x="-2" y="-52" width="4" height="64" rx="2" fill="#5b3a1e"/><path d="M-6 -52 Q0 -48 6 -52 L4 -56 L-4 -56Z" fill="${c}"/><circle cx="0" cy="-61" r="7" fill="${c}" stroke="#fff" stroke-width="1.2"/><circle cx="-2" cy="-63" r="2" fill="#fff" opacity=".8"/>`; break;
+    default: g = `<rect x="-2" y="0" width="4" height="11" rx="1" fill="#5b3a1e"/><rect x="-9" y="-3" width="18" height="4" rx="2" fill="${c}"/><path d="M-3.5 -3 L3.5 -3 L3.5 -50 L0 -57 L-3.5 -50Z" fill="${m}" stroke="${c}" stroke-width="1"/><line x1="0" y1="-5" x2="0" y2="-50" stroke="#fff" stroke-opacity=".6" stroke-width="1"/>`;
+  }
+  let back = '', front = '';
+  if (fx) {
+    const tip = WEAPON_TIP[w.b] || -57;
+    if (w.l >= 7) {   // płomienie: +7 pomarańczowe, +9 magiczne niebiesko-fioletowe
+      const n = w.l >= 9 ? 6 : 3, grad = w.l >= 9 ? 'flame9G' : 'flameG', sc = w.l >= 9 ? 1.35 : .95;
+      for (let i = 0; i < n; i++) {
+        const t = .25 + (i / (n - 1 || 1)) * .75, x = i % 2 ? 3 : -3;
+        back += `<g transform="translate(${x} ${(tip * t + 6).toFixed(1)}) scale(${sc})"><path class="flm" style="animation-delay:${(i * .11).toFixed(2)}s" d="M0 0 C-5 -6 -4 -13 0 -20 C4 -13 5 -6 0 0Z" fill="url(#${grad})"/></g>`;
+      }
+    }
+    if (w.l >= 5) {   // iskry
+      [[-8, tip * .4], [8, tip * .7], [-6, tip * .95]].forEach((p, i) => {
+        front += `<g transform="translate(${p[0]} ${p[1].toFixed(1)})"><path class="spk" style="animation-delay:${i * .4}s" d="M0 -4 L1 -1 L4 0 L1 1 L0 4 L-1 1 L-4 0 L-1 -1Z" fill="#fff"/></g>`;
+      });
+    }
+    if (w.l >= 9) {   // błyskawice
+      front += `<polyline class="bolt" points="2,${tip} 9,${tip - 7} 4,${tip - 10} 12,${tip - 20}" stroke="#e0f2fe" stroke-width="1.6" fill="none"/><polyline class="bolt" style="animation-delay:.5s" points="-2,${tip * .5} -10,${tip * .5 - 5} -6,${tip * .5 - 9} -14,${tip * .5 - 16}" stroke="#e0f2fe" stroke-width="1.4" fill="none"/>`;
+    }
+  }
+  return back + `<g${fAttr(w.l)}>${g}</g>` + front;
+}
+function capPath(m, c) {
+  return `<path d="M42 42 Q42 21 60 21 Q78 21 78 42Z" fill="${m}" stroke="${c}" stroke-width="2"/><rect x="40" y="38" width="40" height="5" rx="2.5" fill="${c}"/><rect x="58" y="40" width="4" height="10" rx="1.5" fill="${m}" stroke="${c}" stroke-width=".8"/>`;
+}
+function helmetSVG(h) {
+  const m = METAL[h.r], c = RARITY[h.r].c; let g;
+  switch (h.b) {
+    case 'horned': g = `<path d="M45 33 Q31 24 33 10 Q39 22 49 28Z" fill="#f3ead2" stroke="#b9a77a"/><path d="M75 33 Q89 24 87 10 Q81 22 71 28Z" fill="#f3ead2" stroke="#b9a77a"/>` + capPath(m, c); break;
+    case 'crown': g = `<path d="M42 38 L45 19 L52 29 L60 14 L68 29 L75 19 L78 38Z" fill="${c}" stroke="#fff" stroke-opacity=".4"/><rect x="42" y="34" width="36" height="6" rx="2" fill="${m}"/><circle cx="60" cy="27" r="2.5" fill="#fff"/>`; break;
+    case 'pumpkin': g = `<ellipse cx="60" cy="44" rx="21" ry="19" fill="#f97316"/><path d="M50 27 Q46 44 50 61 M70 27 Q74 44 70 61" stroke="#c2410c" stroke-width="2" fill="none"/><rect x="58" y="21" width="4" height="7" rx="1.5" fill="#3f6212"/><path d="M50 40 L55 46 L46 46Z M70 40 L74 46 L65 46Z" fill="#fde047"/><path d="M49 52 L53 55 L57 52 L61 55 L65 52 L69 55 L71 52 Q60 62 49 52Z" fill="#fde047"/>`; break;
+    case 'santa': g = `<path d="M43 38 Q50 12 76 20 L86 34 Q78 26 74 36Z" fill="#dc2626"/><rect x="40" y="34" width="40" height="8" rx="4" fill="#fff"/><circle cx="86" cy="35" r="5" fill="#fff"/>`; break;
+    default: g = capPath(m, c);
+  }
+  return `<g${fAttr(h.l)}>${g}</g>`;
+}
+function torsoSVG(a) {
+  if (!a) return `<path d="M42 64 Q60 58 78 64 L80 108 Q60 112 40 108Z" fill="#7c5a34"/><rect x="40" y="96" width="40" height="6" fill="#4a3520"/>`;
+  const m = METAL[a.r], c = RARITY[a.r].c;
+  if (a.b === 'robe') return `<g${fAttr(a.l)}><path d="M42 64 Q60 58 78 64 L84 130 Q60 134 36 130Z" fill="${c}" stroke="#000" stroke-opacity=".3"/><path d="M60 62 L60 130" stroke="#facc15" stroke-width="2"/><rect x="40" y="94" width="40" height="5" fill="#facc15"/></g>`;
+  return `<g${fAttr(a.l)}><path d="M42 64 Q60 58 78 64 L80 108 Q60 112 40 108Z" fill="${m}" stroke="${c}" stroke-width="2"/><path d="M48 72 Q60 80 72 72 M50 84 Q60 90 70 84" stroke="${c}" stroke-width="1.6" fill="none"/><rect x="40" y="96" width="40" height="6" fill="${c}"/>${a.r >= 2 ? `<circle cx="41" cy="67" r="8" fill="${c}" stroke="${m}" stroke-width="1.5"/><circle cx="79" cy="67" r="8" fill="${c}" stroke="${m}" stroke-width="1.5"/>` : ''}</g>`;
+}
+const sleeveColor = a => !a ? '#7c5a34' : a.b === 'robe' ? RARITY[a.r].c : METAL[a.r];
+function bootsSVG(b) {
+  const f = b ? RARITY[b.r].c : '#5b3a1e', t = b ? METAL[b.r] : '#3b2412';
+  return `<g${b ? fAttr(b.l) : ''}><rect x="45" y="131" width="13" height="15" rx="3" fill="${f}" stroke="${t}"/><rect x="40" y="140" width="12" height="6" rx="3" fill="${f}" stroke="${t}"/><rect x="62" y="131" width="13" height="15" rx="3" fill="${f}" stroke="${t}"/><rect x="68" y="140" width="12" height="6" rx="3" fill="${f}" stroke="${t}"/></g>`;
+}
+function amuletSVG(am) {
+  return `<g${fAttr(Math.max(am.l, am.r >= 3 ? 3 : 0))}><path d="M50 61 Q60 75 70 61" stroke="#facc15" stroke-width="1.3" fill="none"/><circle cx="60" cy="72" r="4.5" fill="${RARITY[am.r].c}" stroke="#fff" stroke-width="1"/></g>`;
+}
+function heroSVG(eq, fx = true) {
+  const w = eq.weapon, h = eq.helmet, a = eq.armor, sl = sleeveColor(a), skin = '#f1c27d';
+  let s = `<svg viewBox="0 0 130 160" class="herosvg" xmlns="http://www.w3.org/2000/svg">`;
+  if (fx && SLOT_ORDER.some(k => eq[k] && eq[k].l >= 9)) s += `<ellipse class="aura" cx="62" cy="92" rx="56" ry="68" fill="url(#auraG)"/>`;
+  s += `<ellipse cx="60" cy="148" rx="30" ry="5" fill="rgba(0,0,0,.35)"/>`;
+  s += `<rect x="30" y="64" width="10" height="34" rx="5" fill="${sl}"/><circle cx="35" cy="99" r="5" fill="${skin}"/>`;
+  s += `<rect x="47" y="104" width="11" height="32" rx="3" fill="#3b3355"/><rect x="62" y="104" width="11" height="32" rx="3" fill="#3b3355"/>`;
+  s += bootsSVG(eq.boots) + torsoSVG(a) + (eq.amulet ? amuletSVG(eq.amulet) : '');
+  if (!(h && h.b === 'pumpkin')) {
+    s += `<rect x="55" y="55" width="10" height="9" fill="${skin}"/><circle cx="60" cy="44" r="17" fill="${skin}"/><circle cx="54" cy="46" r="2.2" fill="#222"/><circle cx="66" cy="46" r="2.2" fill="#222"/><path d="M55 53 Q60 57 65 53" stroke="#7a4a2a" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+    if (!h) s += `<path d="M43 42 Q44 24 60 25 Q76 24 77 42 Q70 33 60 34 Q50 33 43 42Z" fill="#5b3a1e"/>`;
+  }
+  if (h) s += helmetSVG(h);
+  s += `<g class="warm" style="transform-origin:83px 66px"><rect x="78" y="62" width="10" height="30" rx="5" fill="${sl}" transform="rotate(-28 83 66)"/><g transform="translate(95 89) rotate(22)">${w ? weaponSVG(w, fx) : ''}</g><circle cx="95" cy="89" r="5" fill="${skin}"/></g>`;
+  return s + '</svg>';
+}
+function itemIcon(it, fx = false) {
+  let vb, inner;
+  switch (it.slot) {
+    case 'weapon': vb = '-26 -82 52 98'; inner = weaponSVG(it, fx); break;
+    case 'helmet': vb = '28 6 66 60'; inner = (it.b === 'pumpkin' ? '' : `<circle cx="60" cy="44" r="17" fill="#f1c27d" opacity=".35"/>`) + helmetSVG(it); break;
+    case 'armor': vb = it.b === 'robe' ? '26 54 68 82' : '28 56 64 60'; inner = torsoSVG(it); break;
+    case 'boots': vb = '36 126 50 24'; inner = bootsSVG(it); break;
+    default: vb = '46 56 28 24'; inner = amuletSVG(it);
+  }
+  return `<svg viewBox="${vb}" class="iico" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+}
+function renderHero() {
+  const el = $('hero'); if (!el) return;
+  const html = heroSVG(equippedAll());
+  if (el._h !== html) { el._h = html; el.innerHTML = html; }
+}
+function heroSwing(crit) {
+  const arm = document.querySelector('#hero .warm');
+  if (!arm) return;
+  try {
+    if (R.swing) R.swing.cancel();
+    R.swing = arm.animate([{ transform: 'rotate(0deg)' }, { transform: `rotate(${crit ? 95 : 70}deg)`, offset: .35 }, { transform: 'rotate(0deg)' }], { duration: crit ? 280 : 200, easing: 'ease-out' });
+    $('hero').animate([{ transform: 'translateX(0)' }, { transform: 'translateX(8px)', offset: .35 }, { transform: 'translateX(0)' }], { duration: 200 });
+  } catch (e) { }
+}
+function slashFx(crit) {
+  const p = monsterCenter(), w = equippedItem('weapon');
+  trimFx();
+  const d = document.createElement('div');
+  d.className = 'slash' + (crit ? ' crit' : '');
+  d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
+  d.style.setProperty('--sc', crit ? '#facc15' : (w ? RARITY[w.r].c : '#ffffff'));
+  fx.appendChild(d);
+  d.addEventListener('animationend', () => d.remove());
+  if (crit && w && w.l >= 9) popText(p.x + rand(-30, 30), p.y - 50, '⚡', 'big');
+}
+
+/* --- Okna przedmiotów i kowala --- */
+function showItemModal(id) {
+  const it = itemById(id); if (!it) { closeModal(); return; }
+  const sd = SLOTS[it.slot], eq = equippedItem(it.slot), isEq = !!eq && eq.id === it.id;
+  showModal(`<div class="bigIco">${itemIcon(it, true)}</div>
+    <div class="rname" style="color:${RARITY[it.r].c}">${itemName(it)}${it.l ? ' +' + it.l : ''}</div>
+    <div class="sub">${RARITY[it.r].n} · ${sd.n}</div>
+    <div class="big" style="font-size:18px">${sd.fmt(itemValue(it))}</div>
+    ${isEq ? '<p class="done-t">✓ Założony</p>' : `<p class="sub">Teraz założony: ${eq ? sd.fmt(itemValue(eq)) : 'nic'}</p>`}
+    ${isEq ? `<button class="btn ghost wide" data-act="unequip" data-arg="${it.slot}">Zdejmij</button>` : `<button class="btn green wide" data-act="equip" data-arg="${it.id}">Załóż</button>`}
+    ${it.l < MAX_UP ? `<button class="btn purple wide" data-act="upOpen" data-arg="${it.id}">🔨 Ulepsz (+${it.l} → +${it.l + 1})</button>` : '<p class="done-t">🔥 Maksymalny poziom +9</p>'}
+    ${isEq ? '' : `<button class="btn red wide" data-act="salvage" data-arg="${it.id}">Rozbierz (+${salvageValue(it)} 💠)</button>`}
+    <button class="btn ghost wide" data-act="closeModal">Zamknij</button>`, { force: true });
+}
+function showUpgradeModal(id, res) {
+  const it = itemById(id); if (!it) { closeModal(); return; }
+  const sd = SLOTS[it.slot];
+  let body;
+  if (it.l >= MAX_UP) body = `<p class="done-t">Osiągnięto maksymalny poziom +9! 🔥</p>`;
+  else {
+    const c = upgradeCost(it), ch = UP_CHANCE[it.l], can = S.stones >= c.stones && S.coins >= c.coins;
+    body = `<p>${sd.fmt(itemValue(it))} → <b>${sd.fmt(itemValue({ ...it, l: it.l + 1 }))}</b></p>
+      <p>Szansa powodzenia: <b style="color:${ch < 1 ? '#fbbf24' : '#4ade80'}">${Math.round(ch * 100)}%</b></p>
+      ${ch < 1 ? '<p class="sub">Przy porażce tracisz materiały, ale przedmiot zostaje.</p>' : ''}
+      <p>Koszt: <b>${c.stones} 💠</b> <span class="sub">(masz ${S.stones})</span> + <b>${fmt(c.coins)} 🪙</b></p>
+      <button class="btn purple wide ${can ? '' : 'off'}" data-act="upDo" data-arg="${it.id}">🔨 Ulepsz do +${it.l + 1}</button>`;
+  }
+  const hint = it.slot === 'weapon' ? 'Wygląd broni: +3 blask · +5 iskry · +7 płomienie · +9 magiczny ogień, błyskawice i aura' : 'Od +3 przedmiot świeci, a +9 daje bohaterowi aurę.';
+  showModal(`<h2>🔨 Kowal</h2><div class="bigIco">${itemIcon(it, true)}</div>
+    <div class="rname" style="color:${RARITY[it.r].c}">${itemName(it)} +${it.l}</div>
+    ${res ? `<div class="upres ${res.ok ? 'ok' : 'bad'}">${res.ok ? '✨ Sukces! Teraz +' + it.l : '💥 Nieudane! Przedmiot bez zmian'}</div>` : ''}
+    ${body}<p class="sub">${hint}</p>
+    <button class="btn ghost wide" data-act="item" data-arg="${it.id}">Wróć</button>`, { force: true });
+}
+function doUpgrade(id) {
+  const it = itemById(id); if (!it || it.l >= MAX_UP) return;
+  const c = upgradeCost(it);
+  if (S.stones < c.stones) { toast('Za mało kamieni 💠 – pokonuj bossów i rozbieraj przedmioty'); return; }
+  if (S.coins < c.coins) { toast('Za mało monet 🪙'); return; }
+  S.stones -= c.stones; S.coins -= c.coins; S.stats.upgrades++; dprog('upgrade');
+  const ok = Math.random() < UP_CHANCE[it.l];
+  if (ok) {
+    it.l++; S.stats.bestUp = Math.max(S.stats.bestUp, it.l);
+    vibrate([30, 30, 80]);
+    if (it.l >= 7) toast(`🔥 ${itemName(it)} +${it.l}!`, 'gold');
+  } else vibrate(250);
+  R.B = bonusAcc(); renderHero(); showUpgradeModal(id, { ok }); renderPanel();
+}
+function equipItem(id) {
+  const it = itemById(id); if (!it) return;
+  S.equip[it.slot] = it.id; R.B = bonusAcc(); renderHero(); closeModal(); renderPanel(); vibrate(20);
+  toast(`Założono: <span style="color:${RARITY[it.r].c}">${itemName(it)}</span>`);
+}
+function unequip(slot) { S.equip[slot] = null; R.B = bonusAcc(); renderHero(); closeModal(); renderPanel(); }
+function salvageItem(id) {
+  const i = S.items.findIndex(x => x.id === id); if (i < 0) return;
+  const it = S.items[i]; if (S.equip[it.slot] === id) return;
+  const v = salvageValue(it); S.items.splice(i, 1); S.stones += v;
+  closeModal(); toast(`🔨 Rozebrano na ${v} 💠`); renderPanel();
+}
+function salvageJunk() {
+  let n = 0, v = 0;
+  S.items = S.items.filter(it => {
+    if (it.r <= 1 && it.l === 0 && S.equip[it.slot] !== it.id) { n++; v += salvageValue(it); return false; }
+    return true;
+  });
+  S.stones += v;
+  toast(n ? `🔨 Rozebrano ${n} przedm. → +${v} 💠` : 'Brak pospolitych i niezwykłych do rozebrania');
+  renderPanel();
+}
+function htmlHero() {
+  const eq = equippedAll();
+  const stats = SLOT_ORDER.filter(s => eq[s]).map(s => `<div>${SLOTS[s].e} ${SLOTS[s].fmt(itemValue(eq[s]))}</div>`).join('') || '<div class="sub">Załóż przedmioty, by zdobyć bonusy</div>';
+  let h = `<h2>🗡️ Bohater</h2><div class="card"><div class="heroPrev">${heroSVG(eq)}</div><div class="stat">${stats}</div></div>
+  <div class="card row"><div class="ico">💠</div><div class="grow"><b>Kamienie ulepszeń: ${S.stones}</b><div class="sub">Z bossów i z rozbierania przedmiotów</div></div></div>
+  <h3>Ekwipunek</h3>`;
+  SLOT_ORDER.forEach(s => {
+    const it = eq[s];
+    h += it ? `<div class="card row" data-act="item" data-arg="${it.id}"><div class="slotIco icell" style="--rc:${RARITY[it.r].c}">${itemIcon(it)}</div>
+      <div class="grow"><b style="color:${RARITY[it.r].c}">${itemName(it)}${it.l ? ' +' + it.l : ''}</b><div class="sub">${SLOTS[s].n} · ${RARITY[it.r].n}</div><div class="sub">${SLOTS[s].fmt(itemValue(it))}</div></div>
+      <button class="btn small purple" data-act="upOpen" data-arg="${it.id}">🔨</button></div>`
+      : `<div class="card row" style="opacity:.6"><div class="slotIco icell" style="--rc:#555;display:flex;align-items:center;justify-content:center;font-size:26px">${SLOTS[s].e}</div>
+      <div class="grow"><b>${SLOTS[s].n}</b><div class="sub">Pusty – przedmioty wypadają z bossów i skrzynek</div></div></div>`;
+  });
+  const bag = S.items.slice().sort((a, b) => b.r - a.r || b.l - a.l);
+  h += `<h3>🎒 Plecak (${S.items.length}/${BAG_MAX})</h3><div class="grid">` + bag.map(it => {
+    const e = S.equip[it.slot] === it.id;
+    return `<div class="cell icell" style="--rc:${RARITY[it.r].c}" data-act="item" data-arg="${it.id}">${itemIcon(it)}${it.l ? `<span class="cl">+${it.l}</span>` : ''}${e ? '<span class="eqm">✓</span>' : ''}</div>`;
+  }).join('') + `</div>
+  <button class="btn ghost wide" data-act="salvageJunk">🔨 Rozbierz pospolite i niezwykłe (+0)</button>
+  <h3>Rzadkości</h3><table class="tbl">${RARITY.map(r => `<tr><td style="color:${r.c};font-weight:800">${r.n}</td><td>×${r.m} bonusu</td></tr>`).join('')}</table>`;
+  return h;
+}
+
+/* =========================================================
    9. SKRZYNKI
    ========================================================= */
 function rollChest(type) {
   const kind = weighted(CHESTS[type].drops), rare = type === 'rare';
+  if (kind === 'item') {
+    const it = rollItem(rare ? [0, 35, 38, 20, 7] : [50, 32, 13, 4, 1]);
+    const label = giveItem(it, true);
+    return { icon: `<span style="display:inline-block;width:90px;height:110px">${itemIcon(it, true)}</span>`, title: label };
+  }
   if (kind === 'coins') {
     const amt = Math.max(incomePerSec() * 120, baseCoin(S.level) * 10 * coinMult()) * (rare ? 4 : 1);
     S.coins += amt; return { icon: '🪙', title: fmt(amt) + ' monet' };
@@ -984,7 +1315,7 @@ function confirmPrestige() {
   const g = prestigeGain();
   if (!g) { toast('Prestiż dostępny od poziomu 50'); return; }
   showModal(`<h2>🔮 Prestiż</h2><p>Zresetujesz poziom, monety, ulepszenia i pomocników.</p>
-    <p>Zachowasz klejnoty, kryształy, karty, artefakty, kolekcję, osiągnięcia i talenty.</p>
+    <p>Zachowasz klejnoty, kryształy, przedmioty bohatera, kamienie, karty, artefakty, kolekcję, osiągnięcia i talenty.</p>
     <div class="big">+${g} 🔮</div><p>Nowy bonus: +${Math.round((S.crystalsTotal + g) * 10)}% obrażeń</p>
     <button class="btn purple wide" data-act="doPrestige">Odrodź się!</button><button class="btn ghost wide" data-act="closeModal">Anuluj</button>`);
 }
@@ -1012,7 +1343,7 @@ function buyTalent(id) {
 }
 function eventBuy(id) {
   const E = currentEvent(); if (!E) return;
-  const items = { skin: E.skinCost, rare: 40, boost: 15, gems: 20 };
+  const items = { skin: E.skinCost, rare: 40, boost: 15, gems: 20, helm: E.helm.cost };
   const c = items[id];
   if (id === 'skin' && S.skins[E.skin]) return;
   if (S.event.cur < c) { toast(`Za mało: ${E.curName} ${E.cur}`); return; }
@@ -1021,6 +1352,7 @@ function eventBuy(id) {
   if (id === 'rare') { S.chests.rare++; toast('🎁 Kupiono rzadką skrzynkę'); }
   if (id === 'boost') { S.boosts.chest = Math.max(Date.now(), S.boosts.chest) + 60000; toast('⚡ Boost ×3 na 60 s'); }
   if (id === 'gems') { S.gems += 15; toast('+15 💎'); }
+  if (id === 'helm') giveItem(newItem('helmet', 3, E.helm.b, E.helm.name));
   renderPanel();
 }
 function applySkin() {
@@ -1043,7 +1375,7 @@ function setTab(t) {
 function renderPanel() {
   const t = R.tab; if (t === 'fight') return;
   const el = $('tab-' + t);
-  const html = t === 'upgrades' ? htmlUpgrades() : t === 'chests' ? htmlChests() : t === 'collection' ? htmlCollection() : htmlMore();
+  const html = t === 'hero' ? htmlHero() : t === 'upgrades' ? htmlUpgrades() : t === 'chests' ? htmlChests() : t === 'collection' ? htmlCollection() : htmlMore();
   if (el._html !== html) { el._html = html; el.innerHTML = html; }
 }
 
@@ -1210,7 +1542,8 @@ function htmlMore() {
       ${S.skins[E.skin] ? '<b class="done-t">✓</b>' : `<button class="btn small" data-act="eventBuy" data-arg="skin">${E.skinCost} ${E.cur}</button>`}</div>
       <div class="card row"><div class="ico">🎁</div><div class="grow"><b>Rzadka skrzynka</b></div><button class="btn small" data-act="eventBuy" data-arg="rare">40 ${E.cur}</button></div>
       <div class="card row"><div class="ico">⚡</div><div class="grow"><b>Boost ×3 (60 s)</b></div><button class="btn small" data-act="eventBuy" data-arg="boost">15 ${E.cur}</button></div>
-      <div class="card row"><div class="ico">💎</div><div class="grow"><b>15 klejnotów</b></div><button class="btn small" data-act="eventBuy" data-arg="gems">20 ${E.cur}</button></div>`;
+      <div class="card row"><div class="ico">💎</div><div class="grow"><b>15 klejnotów</b></div><button class="btn small" data-act="eventBuy" data-arg="gems">20 ${E.cur}</button></div>
+      <div class="card row"><div class="slotIco icell" style="--rc:${RARITY[3].c}">${itemIcon(newItem('helmet', 3, E.helm.b, E.helm.name))}</div><div class="grow"><b style="color:${RARITY[3].c}">${E.helm.name}</b> <span class="lv">Epicki</span><div class="sub">Limitowany hełm – widać go na bohaterze</div></div><button class="btn small" data-act="eventBuy" data-arg="helm">${E.helm.cost} ${E.cur}</button></div>`;
     } else {
       h += `<h2>🎉 Wydarzenia</h2><div class="card"><p>Brak aktywnego wydarzenia.</p><p class="sub">🎃 Halloween – październik · 🎄 Święta – grudzień</p></div>`;
     }
@@ -1313,6 +1646,13 @@ const ACTIONS = {
   prestige: confirmPrestige, doPrestige,
   talent: a => buyTalent(a),
   eventBuy: a => eventBuy(a),
+  item: a => showItemModal(a),
+  equip: a => equipItem(a),
+  unequip: a => unequip(a),
+  salvage: a => salvageItem(a),
+  salvageJunk: () => salvageJunk(),
+  upOpen: a => showUpgradeModal(a),
+  upDo: a => doUpgrade(a),
   skin: a => { S.skin = S.skin === a ? '' : a; applySkin(); renderPanel(); },
   toggleVib: () => { S.settings.vibrate = !S.settings.vibrate; renderPanel(); vibrate(30); },
   checkUpd: () => checkUpdate(true), doUpdate,
@@ -1435,7 +1775,7 @@ function tick() {
       S.hp -= dps * dt; R.dpsAcc += dps * dt;
       if (t - R.lastDpsPop > 1000) {
         R.lastDpsPop = t;
-        if (R.tab === 'fight' && R.dpsAcc > 0) { const r = arena.getBoundingClientRect(); popText(r.width / 2 + rand(-60, 60), r.height / 2 + rand(-40, 20), '⚔️' + fmt(R.dpsAcc), 'dps'); }
+        if (R.tab === 'fight' && R.dpsAcc > 0) { const r = monsterCenter(); popText(r.x + rand(-50, 50), r.y + rand(-40, 20), '⚔️' + fmt(R.dpsAcc), 'dps'); }
         R.dpsAcc = 0;
       }
       if (S.hp <= 0) { S.hp = 0; kill(); }
@@ -1466,8 +1806,13 @@ function everySecond() {
    ========================================================= */
 function init() {
   const had = load();
+  if (!S.starter) {   // startowy miecz dla nowych i starych zapisów
+    const it = newItem('weapon', 0, 'sword');
+    S.items.push(it); S.equip.weapon = it.id; S.starter = true;
+  }
   R.B = bonusAcc();
   applySkin();
+  renderHero();
   spawnMonster();
   arena.addEventListener('pointerdown', onTap);
   arena.addEventListener('contextmenu', e => e.preventDefault());
