@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#14102a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Monster Tap">
+<title>Monster Tap</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👹</text></svg>">
+<style>
+/* =========================================================
+   STYLE – podstawy
+   ========================================================= */
+:root{--panel:rgba(18,14,38,.94);--card:#241d45;--card2:#2f2658;--acc:#ffcc33;--txt:#fff;--mut:#b9b0d9;--good:#4ade80;--bad:#f87171}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#0b0918;color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation;overscroll-behavior:none}
+button{font-family:inherit;cursor:pointer}
+textarea{user-select:text;-webkit-user-select:text;width:100%;height:120px;border-radius:10px;padding:8px;font-size:12px;background:#120e26;color:#fff;border:1px solid #444;margin:10px 0}
+.hidden{display:none!important}
+#app{position:relative;height:100vh;height:100dvh;max-width:520px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;background:#1d5a33}
+
+/* Tła światów */
+#app.w0{background:radial-gradient(ellipse at 50% 40%,#3f9a5c 0%,#1d5a33 45%,#0b2614 100%)}
+#app.w1{background:radial-gradient(ellipse at 50% 30%,#f2c46d 0%,#c47f32 45%,#5a300f 100%)}
+#app.w2{background:radial-gradient(ellipse at 50% 30%,#cdeeff 0%,#5aa6dc 40%,#163a60 100%)}
+#app.w3{background:radial-gradient(ellipse at 50% 40%,#ff7a3d 0%,#9b1f0e 45%,#2a0604 100%)}
+#app.w4{background:radial-gradient(1.5px 1.5px at 15% 20%,#fff,transparent),radial-gradient(1px 1px at 70% 15%,#fff,transparent),radial-gradient(1.5px 1.5px at 40% 60%,#fff,transparent),radial-gradient(1px 1px at 85% 70%,#fff,transparent),radial-gradient(1px 1px at 25% 85%,#fff,transparent),radial-gradient(1.5px 1.5px at 60% 35%,#fff,transparent),radial-gradient(ellipse at 50% 40%,#3b2a7a,#120b2e 55%,#02010a)}
+
+/* Górny pasek walut */
+#top{display:flex;gap:6px;padding:calc(env(safe-area-inset-top) + 6px) 8px 6px;background:rgba(0,0,0,.35)}
+.cur{flex:1;background:rgba(0,0,0,.4);border-radius:12px;padding:7px 6px;font-size:15px;text-align:center;white-space:nowrap;overflow:hidden}
+.cur b{font-weight:800}
+main{flex:1;position:relative;overflow:hidden}
+.tab{position:absolute;inset:0;display:none}
+.tab.active{display:flex}
+.tab.panel.active{display:block}
+.panel{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 24px;background:var(--panel)}
+
+/* Dolna nawigacja */
+#nav{display:flex;background:#120e26;padding-bottom:env(safe-area-inset-bottom);border-top:1px solid rgba(255,255,255,.08)}
+#nav button{flex:1;height:62px;border:none;background:none;color:var(--mut);font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative}
+#nav button i{font-style:normal;font-size:23px}
+#nav button.on{color:var(--acc);background:rgba(255,204,51,.08)}
+.dot{position:absolute;top:6px;right:22%;width:11px;height:11px;background:#ef4444;border-radius:50%;border:2px solid #120e26}
+
+/* =========================================================
+   STYLE – ekran walki
+   ========================================================= */
+#tab-fight{flex-direction:column;padding:8px 12px 10px;gap:6px}
+#worldBar{display:flex;justify-content:space-between;font-weight:800;text-shadow:0 2px 3px #000;font-size:15px}
+#eventBar{background:rgba(255,120,0,.3);border:1px solid rgba(255,160,60,.6);border-radius:10px;padding:4px 8px;font-size:13px;font-weight:700;text-align:center}
+#boosts{display:flex;flex-wrap:wrap;gap:4px;min-height:0;justify-content:center}
+.bchip{background:rgba(0,0,0,.5);border-radius:999px;padding:2px 8px;font-size:12px;font-weight:700}
+#monsterName{text-align:center;font-weight:800;font-size:17px;text-shadow:0 2px 3px #000}
+.bar{position:relative;height:22px;background:rgba(0,0,0,.5);border-radius:11px;overflow:hidden;border:2px solid rgba(255,255,255,.15);flex-shrink:0}
+.bar>div{height:100%;width:100%;transition:width .12s}
+.bar>span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;text-shadow:0 1px 2px #000;white-space:nowrap}
+#hpFill{background:linear-gradient(90deg,#ef4444,#f97316)}
+#bossFill{background:linear-gradient(90deg,#a855f7,#ec4899)}
+#comboFill{background:linear-gradient(90deg,#22d3ee,#a3e635);transition:width .1s}
+#app.frenzy #comboFill{background:linear-gradient(90deg,#f43f5e,#f59e0b,#facc15,#f43f5e);background-size:200% 100%;animation:rainbow 1s linear infinite}
+@keyframes rainbow{to{background-position:200% 0}}
+#nextFill{background:linear-gradient(90deg,#facc15,#f59e0b)}
+#arena{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:170px;touch-action:none}
+#deco{position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:38px;opacity:.28;pointer-events:none;letter-spacing:6px}
+#monster{font-size:min(38vw,165px);line-height:1;filter:drop-shadow(0 10px 12px rgba(0,0,0,.55));position:relative;pointer-events:none}
+#monster.boss{font-size:min(46vw,205px)}
+#monster.boss::before{content:'';position:absolute;inset:-12%;border-radius:50%;background:radial-gradient(circle,rgba(255,40,80,.45),transparent 65%);animation:pulse 1s ease-in-out infinite alternate;z-index:-1}
+#monster.frozen #monsterEmoji{filter:brightness(1.3) saturate(.3) drop-shadow(0 0 14px #7dd3fc)!important}
+#monsterEmoji{display:inline-block;animation:bob 2.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px) scale(1.03)}}
+@keyframes pulse{to{transform:scale(1.12);opacity:.7}}
+.dying{animation:die .38s ease-in forwards}
+@keyframes die{to{transform:scale(1.5) rotate(25deg);opacity:0;filter:blur(6px) brightness(3)}}
+.spawn{animation:spawn .3s ease-out}
+@keyframes spawn{from{transform:scale(.3);opacity:0}}
+#fx{position:absolute;inset:0;pointer-events:none}
+.dmg{position:absolute;font-weight:900;font-size:24px;color:#fff;text-shadow:0 2px 0 #000,0 0 6px #000;pointer-events:none;animation:dmgUp .8s ease-out forwards;white-space:nowrap;z-index:4}
+.dmg.crit{color:var(--acc);font-size:34px}
+.dmg.dps{color:#cbd5e1;font-size:15px;opacity:.85}
+.dmg.coin{color:#fde047;font-size:22px}
+.dmg.big{font-size:42px;color:#fb923c}
+@keyframes dmgUp{0%{transform:translate(-50%,0) scale(.6);opacity:1}20%{transform:translate(-50%,-20px) scale(1.15)}100%{transform:translate(-50%,-90px) scale(1);opacity:0}}
+.pt{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;animation:pt .6s ease-out forwards}
+.pt.em{width:auto;height:auto;background:none!important;font-size:16px;line-height:1}
+.pt.frag{font-size:34px;animation:frag .7s ease-out forwards}
+@keyframes pt{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+@keyframes frag{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(.4);opacity:0}}
+.coinfly{position:fixed;font-size:22px;pointer-events:none;z-index:90;animation:coinF .9s ease-in forwards}
+@keyframes coinF{0%{transform:translate(0,0) scale(.4)}30%{transform:translate(var(--bx),var(--by)) scale(1.15)}100%{transform:translate(var(--tx),var(--ty)) scale(.5);opacity:.5}}
+.meteor{position:absolute;font-size:44px;animation:meteor .45s ease-in forwards;pointer-events:none}
+@keyframes meteor{from{transform:translate(160px,-260px)}to{transform:translate(0,0)}}
+/* Szał – świecenie ekranu */
+#app.frenzy #tab-fight::before{content:'';position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 70px 22px rgba(255,90,0,.75);animation:glow .45s alternate infinite;z-index:3}
+@keyframes glow{to{box-shadow:inset 0 0 40px 10px rgba(255,200,0,.6)}}
+/* Złoty skarb */
+#golden{position:absolute;z-index:6;font-size:56px;animation:flyX 6s linear forwards;filter:drop-shadow(0 0 14px gold)}
+#golden span{display:inline-block;animation:wob .8s ease-in-out infinite alternate}
+@keyframes flyX{from{left:-70px}to{left:105%}}
+@keyframes wob{from{transform:translateY(-14px) rotate(-10deg)}to{transform:translateY(14px) rotate(10deg)}}
+/* Umiejętności */
+#skills{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;flex-shrink:0}
+.skill{position:relative;height:66px;border-radius:14px;border:2px solid rgba(255,255,255,.12);background:linear-gradient(180deg,#3a2f6e,#251d4b);color:#fff;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.skill .se{font-size:25px;line-height:1}
+.skill .sl{font-size:10px;font-weight:700;margin-top:3px}
+.skill .cd{position:absolute;left:0;right:0;bottom:0;height:0;background:rgba(0,0,0,.65)}
+.skill .ct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;text-shadow:0 1px 3px #000}
+.skill.act{border-color:#facc15;box-shadow:0 0 12px #facc15}
+.skill.ad{background:linear-gradient(180deg,#0e7490,#164e63)}
+.skill .ac{position:absolute;top:2px;right:5px;font-size:10px;font-weight:800}
+#nextUp{cursor:pointer}
+
+/* =========================================================
+   STYLE – panele, karty, przyciski
+   ========================================================= */
+h2{font-size:21px;margin:2px 0 10px}
+h3{font-size:16px;margin:12px 0 8px}
+.card{background:var(--card);border-radius:14px;padding:12px;margin-bottom:10px;border:1px solid rgba(255,255,255,.06)}
+.row{display:flex;align-items:center;gap:10px}
+.ico{font-size:34px;width:46px;text-align:center;flex-shrink:0}
+.grow{flex:1;min-width:0}
+.sub{font-size:12px;color:var(--mut);margin-top:2px}
+.lv{font-size:12px;background:rgba(255,255,255,.1);border-radius:6px;padding:1px 6px;margin-left:4px}
+.stars{color:#facc15;letter-spacing:1px}
+.btn{min-height:46px;border:none;border-radius:12px;padding:8px 12px;font-weight:800;font-size:14px;color:#1a1300;background:linear-gradient(180deg,#ffd84d,#f5a623);box-shadow:0 3px 0 #a86b00;min-width:88px;line-height:1.2}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #a86b00}
+.btn.off,.btn:disabled{filter:grayscale(1) brightness(.6)}
+.btn.blue{background:linear-gradient(180deg,#7dd3fc,#3b82f6);box-shadow:0 3px 0 #1e40af;color:#05153a}
+.btn.purple{background:linear-gradient(180deg,#d8b4fe,#9333ea);box-shadow:0 3px 0 #581c87;color:#fff}
+.btn.green{background:linear-gradient(180deg,#86efac,#16a34a);box-shadow:0 3px 0 #14532d;color:#04210f}
+.btn.ghost{background:var(--card2);color:#fff;box-shadow:0 3px 0 #15102c}
+.btn.red{background:linear-gradient(180deg,#fca5a5,#dc2626);box-shadow:0 3px 0 #7f1d1d;color:#fff}
+.btn.wide{width:100%;margin-top:8px}
+.btn.small{min-height:34px;min-width:0;padding:6px 10px;font-size:13px}
+.subnav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chip{padding:9px 12px;border-radius:999px;background:var(--card2);font-weight:700;font-size:13px;border:none;color:#fff;position:relative}
+.chip.on{background:var(--acc);color:#1a1300}
+.chip .dot{top:-3px;right:-3px}
+.pbar{height:10px;background:rgba(0,0,0,.45);border-radius:5px;overflow:hidden;margin-top:6px}
+.pbar>div{height:100%;background:linear-gradient(90deg,#4ade80,#22c55e)}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.grid.g4{grid-template-columns:repeat(4,1fr)}
+.cell{background:var(--card2);border-radius:10px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:26px;padding:2px;text-align:center;position:relative}
+.cell small{font-size:8px;color:var(--mut);line-height:1.1;margin-top:2px}
+.cell.lock{opacity:.35}
+.cell.today{outline:3px solid var(--acc)}
+.cell.done{background:#1e4d33}
+.cell .cl{position:absolute;top:2px;right:4px;font-size:9px;font-weight:800;color:#facc15}
+.tbl{width:100%;font-size:13px;border-collapse:collapse;margin-top:6px}
+.tbl td{padding:4px 2px;border-bottom:1px solid rgba(255,255,255,.07)}
+.tbl td:last-child{text-align:right;font-weight:700}
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px}
+.stat div{background:rgba(0,0,0,.25);border-radius:8px;padding:6px 8px}
+.done-t{color:var(--good);font-weight:800}
+.branch{border-left:3px solid var(--acc);padding-left:10px;margin-bottom:12px}
+.branch.idle{border-color:#60a5fa}
+
+/* Modal i powiadomienia */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:100;padding:18px}
+.mbox{background:linear-gradient(180deg,#2c2356,#1a1438);border-radius:20px;padding:20px;width:100%;max-width:420px;max-height:86vh;overflow:auto;text-align:center;border:2px solid rgba(255,255,255,.12);animation:pop .25s}
+.mbox p{margin:8px 0;color:#e5e0ff}
+.big{font-size:30px;font-weight:900;color:var(--acc);margin:8px 0}
+@keyframes pop{from{transform:scale(.7);opacity:0}}
+#toasts{position:fixed;top:calc(env(safe-area-inset-top) + 54px);left:50%;transform:translateX(-50%);z-index:120;width:min(92vw,420px);display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{background:rgba(20,16,40,.96);border:2px solid rgba(255,255,255,.2);border-radius:14px;padding:10px 12px;font-weight:700;font-size:14px;animation:tin .3s,tout .4s 2.6s forwards;text-align:center}
+.toast.gold{border-color:var(--acc);background:linear-gradient(90deg,#3a2a05,#1f1a3a)}
+@keyframes tin{from{transform:translateY(-20px);opacity:0}}
+@keyframes tout{to{transform:translateY(-20px);opacity:0}}
+#updBanner{position:fixed;top:0;left:0;right:0;z-index:130;background:linear-gradient(90deg,#16a34a,#0d9488);padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:14px}
+#updBanner span{flex:1}
+/* Skrzynka */
+.chestBig{font-size:110px;display:inline-block;margin:10px 0}
+.shake{animation:cshake .9s ease-in-out}
+@keyframes cshake{0%,100%{transform:rotate(0)}15%{transform:rotate(-12deg) scale(1.05)}30%{transform:rotate(12deg)}45%{transform:rotate(-14deg) scale(1.1)}60%{transform:rotate(14deg)}75%{transform:rotate(-8deg) scale(1.2)}}
+.rays{position:relative;display:inline-block;margin:10px 0;font-size:90px;animation:pop .4s}
+.rays::before{content:'';position:absolute;inset:-40px;background:repeating-conic-gradient(rgba(255,215,0,.35) 0 12deg,transparent 12deg 30deg);border-radius:50%;animation:spin 6s linear infinite;z-index:-1;-webkit-mask:radial-gradient(circle,#000 30%,transparent 70%);mask:radial-gradient(circle,#000 30%,transparent 70%)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.adbox{font-size:80px;margin:16px 0;animation:bob 1s infinite}
+/* Koło fortuny */
+#wheelWrap{position:relative;width:min(78vw,290px);aspect-ratio:1;margin:18px auto 10px}
+#wheel{width:100%;height:100%;border-radius:50%;border:6px solid #ffd84d;transition:transform 4s cubic-bezier(.17,.67,.21,1);position:relative;box-shadow:0 0 25px rgba(255,216,77,.4)}
+.wseg{position:absolute;left:50%;top:0;height:50%;width:60px;margin-left:-30px;transform-origin:50% 100%;text-align:center;padding-top:12px;font-size:17px;font-weight:900;text-shadow:0 1px 2px #000}
+#wheelPtr{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:30px;z-index:2;filter:drop-shadow(0 2px 2px #000)}
+#wheelHub{position:absolute;inset:40%;background:#1a1438;border:4px solid #ffd84d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+
+/* Skórki wydarzeń */
+#app.skin-pumpkin{--acc:#ff8c1a}
+#app.skin-pumpkin #arena::before{content:'';position:absolute;inset:5%;background:radial-gradient(circle,rgba(255,120,0,.4),transparent 65%);pointer-events:none}
+#app.skin-pumpkin #top{background:linear-gradient(90deg,rgba(120,40,0,.6),rgba(40,0,60,.6))}
+#app.skin-winter #arena::before{content:'';position:absolute;inset:0;background:radial-gradient(2px 2px at 10% 20%,#fff,transparent),radial-gradient(2px 2px at 30% 70%,#fff,transparent),radial-gradient(2px 2px at 60% 30%,#fff,transparent),radial-gradient(2px 2px at 80% 60%,#fff,transparent),radial-gradient(2px 2px at 50% 90%,#fff,transparent),radial-gradient(circle,rgba(180,220,255,.3),transparent 65%);pointer-events:none}
+</style>
+</head>
+<body>
+<div id="app" class="w0">
+  <div id="updBanner" class="hidden"><span id="updTxt">Nowa wersja!</span><button class="btn small green" data-act="doUpdate">Aktualizuj</button></div>
+
+  <!-- Górny pasek walut -->
+  <header id="top">
+    <div class="cur" id="coinsBox">🪙 <b id="coins">0</b></div>
+    <div class="cur">💎 <b id="gems">0</b></div>
+    <div class="cur">🔮 <b id="crystals">0</b></div>
+  </header>
+
+  <main>
+    <!-- ZAKŁADKA: WALKA -->
+    <section id="tab-fight" class="tab active">
+      <div id="worldBar"><span id="worldName">🌲 Las</span><span id="levelTxt">Poziom 1</span></div>
+      <div id="eventBar" class="hidden" data-act="goEvent"></div>
+      <div id="boosts"></div>
+      <div id="monsterName"></div>
+      <div class="bar"><div id="hpFill"></div><span id="hpTxt"></span></div>
+      <div class="bar hidden" id="bossBar"><div id="bossFill"></div><span id="bossTxt"></span></div>
+      <div id="arena">
+        <div id="deco"></div>
+        <div id="monster"><span id="monsterEmoji">🐛</span></div>
+        <div id="fx"></div>
+      </div>
+      <div class="bar"><div id="comboFill" style="width:0"></div><span id="comboTxt">COMBO</span></div>
+      <div id="skills">
+        <button class="skill" data-act="skill" data-arg="meteor" id="sk-meteor"><span class="se">☄️</span><span class="sl">Meteory</span><div class="cd"></div><span class="ct"></span></button>
+        <button class="skill" data-act="skill" data-arg="freeze" id="sk-freeze"><span class="se">❄️</span><span class="sl">Zamrożenie</span><div class="cd"></div><span class="ct"></span></button>
+        <button class="skill" data-act="skill" data-arg="gold" id="sk-gold"><span class="se">✨</span><span class="sl">Złoty dotyk</span><div class="cd"></div><span class="ct"></span></button>
+        <button class="skill ad" data-act="adBoost" id="adBtn"><span class="ac" id="adCnt">0/10</span><span class="se">📺</span><span class="sl" id="adLbl">×2 obr. 3 min</span></button>
+      </div>
+      <div class="bar" id="nextUp" data-act="tab" data-arg="upgrades"><div id="nextFill" style="width:0"></div><span id="nextTxt"></span></div>
+    </section>
+
+    <section id="tab-upgrades" class="tab panel"></section>
+    <section id="tab-chests" class="tab panel"></section>
+    <section id="tab-collection" class="tab panel"></section>
+    <section id="tab-more" class="tab panel"></section>
+  </main>
+
+  <!-- Dolne zakładki -->
+  <nav id="nav">
+    <button data-act="tab" data-arg="fight" class="on"><i>⚔️</i>Walka</button>
+    <button data-act="tab" data-arg="upgrades"><i>⬆️</i>Ulepszenia<span class="dot hidden" id="dot-upgrades"></span></button>
+    <button data-act="tab" data-arg="chests"><i>📦</i>Skrzynki<span class="dot hidden" id="dot-chests"></span></button>
+    <button data-act="tab" data-arg="collection"><i>📖</i>Kolekcja</button>
+    <button data-act="tab" data-arg="more"><i>☰</i>Więcej<span class="dot hidden" id="dot-more"></span></button>
+  </nav>
+</div>
+<div id="toasts"></div>
+<div id="modal" class="hidden"><div class="mbox" id="modalBox"></div></div>
+
+<script>
+'use strict';
+/* =========================================================
+   1. WERSJA I NARZĘDZIA
+   Zmień GAME_VERSION przy każdej aktualizacji na GitHubie –
+   gracze zobaczą pasek „Aktualizuj”, a postęp zostanie zachowany.
+   ========================================================= */
+const GAME_VERSION = '1.0.0';
+const SAVE_KEY = 'monsterTap_save_v1';
+
+const $ = id => document.getElementById(id);
+const rand = (a, b) => a + Math.random() * (b - a);
+const randInt = (a, b) => Math.floor(rand(a, b + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function weighted(list) { // [[wartość, waga], ...]
+  const total = list.reduce((s, x) => s + x[1], 0);
+  let r = Math.random() * total;
+  for (const x of list) { if ((r -= x[1]) < 0) return x[0]; }
+  return list[list.length - 1][0];
+}
+
+/* Skracanie liczb: K, M, B, T, aa, ab ... */
+function fmt(n) {
+  if (n === undefined || n === null || isNaN(n)) return '0';
+  if (!isFinite(n)) return '∞';
+  if (n < 0) n = 0;
+  if (n < 1000) return (n < 10 && n % 1 > 0.05) ? n.toFixed(1) : String(Math.floor(n));
+  const e = Math.floor(Math.log10(n) / 3);
+  const v = n / Math.pow(10, e * 3);
+  let suf;
+  if (e <= 4) suf = ['', 'K', 'M', 'B', 'T'][e];
+  else { const i = e - 5; suf = String.fromCharCode(97 + Math.floor(i / 26) % 26) + String.fromCharCode(97 + i % 26); }
+  const s = v < 10 ? (Math.floor(v * 100) / 100).toFixed(2) : v < 100 ? (Math.floor(v * 10) / 10).toFixed(1) : String(Math.floor(v));
+  return s + suf;
+}
+function fmtTime(sec) {
+  sec = Math.max(0, Math.ceil(sec));
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  return h ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`;
+}
+function dateKey(d) { return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; }
+const todayKey = () => dateKey(new Date());
+const yesterdayKey = () => { const d = new Date(); d.setDate(d.getDate() - 1); return dateKey(d); };
+function setText(el, v) { if (el._t !== v) { el._t = v; el.textContent = v; } }
+function vibrate(p) { try { if (S.settings.vibrate && navigator.vibrate) navigator.vibrate(p); } catch (e) { } }
+
+/* =========================================================
+   2. DANE GRY (światy, pomocnicy, artefakty, osiągnięcia...)
+   ========================================================= */
+const WORLDS = [
+  { name: 'Las', icon: '🌲', cls: 'w0', deco: '🌲🌳🌲🌳🌲', col: ['#4ade80', '#a3e635', '#fde047'],
+    mons: [['🐛', 'Gąsienica'], ['🍄', 'Grzybol'], ['🐸', 'Ropuch'], ['🐗', 'Dzik'], ['🦊', 'Lis'], ['🐺', 'Wilk'], ['🕷️', 'Pająk'], ['🦉', 'Sowa'], ['🐻', 'Niedźwiedź'], ['🌳', 'Ent']] },
+  { name: 'Pustynia', icon: '🏜️', cls: 'w1', deco: '🌵🏜️🌵🏜️🌵', col: ['#fbbf24', '#f97316', '#fde68a'],
+    mons: [['🦂', 'Skorpion'], ['🐍', 'Kobra'], ['🐪', 'Wielbłąd'], ['🦎', 'Jaszczur'], ['🌵', 'Kaktusor'], ['🐫', 'Dromader'], ['🦅', 'Sęp'], ['🏺', 'Przeklęta amfora'], ['🧞', 'Dżin'], ['🐉', 'Piaskowy smok']] },
+  { name: 'Lód', icon: '❄️', cls: 'w2', deco: '🏔️❄️🏔️❄️🏔️', col: ['#e0f2fe', '#7dd3fc', '#ffffff'],
+    mons: [['🐧', 'Pingwin'], ['🦭', 'Foka'], ['⛄', 'Bałwan'], ['🐻', 'Lodowy miś'], ['🦌', 'Renifer'], ['🐺', 'Śnieżny wilk'], ['❄️', 'Płatkor'], ['🧊', 'Lodowiec'], ['🦣', 'Mamut'], ['🐋', 'Wieloryb']] },
+  { name: 'Wulkan', icon: '🌋', cls: 'w3', deco: '🌋🔥🌋🔥🌋', col: ['#f97316', '#ef4444', '#facc15'],
+    mons: [['🔥', 'Ognik'], ['🦎', 'Salamandra'], ['🐲', 'Smoczek'], ['👹', 'Ogr'], ['😈', 'Diablik'], ['🌋', 'Lawon'], ['🦇', 'Nietoperz'], ['💀', 'Kościej'], ['👺', 'Tengu'], ['🐉', 'Smok ognia']] },
+  { name: 'Kosmos', icon: '🪐', cls: 'w4', deco: '🪐✨🌙✨🪐', col: ['#a78bfa', '#22d3ee', '#f0abfc'],
+    mons: [['👾', 'Glitch'], ['🛸', 'UFO'], ['👽', 'Kosmita'], ['🤖', 'Robot'], ['🌑', 'Mroczny księżyc'], ['☄️', 'Kometa'], ['🪐', 'Planetor'], ['🐙', 'Kosmiczna ośmiornica'], ['🌌', 'Mgławica'], ['🌟', 'Gwiazdor']] },
+];
+
+const HELPERS = [
+  { name: 'Łucznik', e: '🏹', cost: 25, dps: 1 },
+  { name: 'Mag', e: '🧙', cost: 300, dps: 8 },
+  { name: 'Rycerz', e: '⚔️', cost: 4000, dps: 60 },
+  { name: 'Elfka', e: '🧝', cost: 55000, dps: 450 },
+  { name: 'Anioł', e: '👼', cost: 800000, dps: 4000 },
+];
+
+const ARTIFACTS = [
+  { id: 'sword', e: '🗡️', name: 'Miecz Zarania', t: 'click', v: .10, d: '+10% obr. kliknięcia' },
+  { id: 'ring', e: '💍', name: 'Pierścień Chciwości', t: 'coin', v: .10, d: '+10% monet' },
+  { id: 'totem', e: '🗿', name: 'Totem Drużyny', t: 'dps', v: .15, d: '+15% DPS' },
+  { id: 'eye', e: '🧿', name: 'Oko Sokoła', t: 'critC', v: .02, d: '+2% szansy kryt.' },
+  { id: 'glove', e: '🥊', name: 'Rękawica Mocy', t: 'critM', v: .5, d: '+0,5 mnożnika kryt.' },
+  { id: 'hourglass', e: '⏳', name: 'Klepsydra Snu', t: 'offline', v: .10, d: '+10% zarobków offline' },
+  { id: 'clock', e: '⏱️', name: 'Zegar Bossa', t: 'bossT', v: 2, d: '+2 s na bossa' },
+  { id: 'compass', e: '🧭', name: 'Kompas Skarbów', t: 'gold', v: .25, d: '+25% złotego skarbu' },
+  { id: 'pepper', e: '🌶️', name: 'Papryczka Furii', t: 'frenzyT', v: 1, d: '+1 s szału' },
+  { id: 'crown', e: '👑', name: 'Korona Króla', t: 'dmg', v: .08, d: '+8% wszystkich obrażeń' },
+  { id: 'chalice', e: '🏆', name: 'Kielich Fortuny', t: 'coin', v: .08, d: '+8% monet' },
+  { id: 'star', e: '🌠', name: 'Spadająca Gwiazda', t: 'dps', v: .10, d: '+10% DPS' },
+];
+
+// b = [typ bonusu, wartość]
+const ACHIEVEMENTS = [
+  { id: 'c1', name: 'Rozgrzewka', desc: '1 000 kliknięć', cond: s => s.stats.clicks >= 1000, b: ['dmg', .02], bd: '+2% obrażeń', gems: 10 },
+  { id: 'c2', name: 'Klikacz', desc: '10 000 kliknięć', cond: s => s.stats.clicks >= 1e4, b: ['dmg', .03], bd: '+3% obrażeń', gems: 25 },
+  { id: 'c3', name: 'Legenda palca', desc: '100 000 kliknięć', cond: s => s.stats.clicks >= 1e5, b: ['dmg', .05], bd: '+5% obrażeń', gems: 60 },
+  { id: 'k1', name: 'Łowca', desc: 'Pokonaj 100 potworów', cond: s => s.stats.kills >= 100, b: ['coin', .03], bd: '+3% monet', gems: 10 },
+  { id: 'k2', name: 'Pogromca', desc: 'Pokonaj 1 000 potworów', cond: s => s.stats.kills >= 1000, b: ['coin', .05], bd: '+5% monet', gems: 30 },
+  { id: 'b1', name: 'Bossobójca', desc: 'Pokonaj 10 bossów', cond: s => s.stats.bosses >= 10, b: ['coin', .05], bd: '+5% monet', gems: 20 },
+  { id: 'b2', name: 'Król bossów', desc: 'Pokonaj 100 bossów', cond: s => s.stats.bosses >= 100, b: ['dmg', .05], bd: '+5% obrażeń', gems: 50 },
+  { id: 'l1', name: 'Odkrywca', desc: 'Osiągnij poziom 50', cond: s => s.maxLevelEver >= 50, b: ['dps', .05], bd: '+5% DPS', gems: 15 },
+  { id: 'l2', name: 'Nowy świat', desc: 'Dotrzyj do Pustyni (poz. 101)', cond: s => s.maxLevelEver >= 101, b: ['dmg', .05], bd: '+5% obrażeń', gems: 30 },
+  { id: 'w5', name: 'Podróżnik', desc: 'Odwiedź wszystkie 5 światów', cond: s => s.maxLevelEver >= 401, b: ['dmg', .25], bd: '+25% obrażeń', gems: 150 },
+  { id: 'p1', name: 'Odrodzenie', desc: 'Pierwszy prestiż', cond: s => s.stats.prestiges >= 1, b: ['dmg', .10], bd: '+10% obrażeń', gems: 50 },
+  { id: 'ch1', name: 'Zbieracz', desc: 'Otwórz 10 skrzynek', cond: s => s.stats.chests >= 10, b: ['coin', .05], bd: '+5% monet', gems: 15 },
+  { id: 'ch2', name: 'Kolekcjoner', desc: 'Otwórz 50 skrzynek', cond: s => s.stats.chests >= 50, b: ['coin', .05], bd: '+5% monet', gems: 40 },
+  { id: 'g1', name: 'Złota rączka', desc: 'Złap 5 złotych skarbów', cond: s => s.stats.golden >= 5, b: ['gold', .10], bd: '+10% złotego skarbu', gems: 20 },
+  { id: 'f1', name: 'Berserker', desc: 'Wejdź w SZAŁ 10 razy', cond: s => s.stats.frenzies >= 10, b: ['click', .05], bd: '+5% obr. kliknięcia', gems: 15 },
+  { id: 'cr1', name: 'Snajper', desc: 'Zadaj 1 000 krytyków', cond: s => s.stats.crits >= 1000, b: ['critM', .25], bd: '+0,25 mnożnika kryt.', gems: 20 },
+];
+
+const TALENTS = [
+  { id: 'tc1', br: 'click', e: '💪', name: 'Siła uderzenia', d: '+25% obrażeń kliknięcia', fx: [['click', .25]], max: 5 },
+  { id: 'tc2', br: 'click', e: '🎯', name: 'Precyzja', d: '+2% szansy na krytyk', fx: [['critC', .02]], max: 5 },
+  { id: 'tc3', br: 'click', e: '💥', name: 'Miażdżenie', d: '+0,5 mnożnika krytyka', fx: [['critM', .5]], max: 5 },
+  { id: 'tc4', br: 'click', e: '🔥', name: 'Furia', d: '+25% napełniania combo, +1 s szału', fx: [['combo', .25], ['frenzyT', 1]], max: 5 },
+  { id: 'ti1', br: 'idle', e: '🤝', name: 'Drużyna', d: '+25% DPS pomocników', fx: [['dps', .25]], max: 5 },
+  { id: 'ti2', br: 'idle', e: '😴', name: 'Sen bohatera', d: '+2 h limitu i +10% zarobków offline', fx: [['offlineH', 2], ['offline', .10]], max: 5 },
+  { id: 'ti3', br: 'idle', e: '🪙', name: 'Chciwość', d: '+15% monet', fx: [['coin', .15]], max: 5 },
+  { id: 'ti4', br: 'idle', e: '💰', name: 'Poszukiwacz skarbów', d: '+30% złotego skarbu', fx: [['gold', .30]], max: 5 },
+];
+
+const QUEST_POOL = [
+  { t: 'boss', txt: 'Pokonaj {n} bossów', n: [3, 5] },
+  { t: 'clicks', txt: 'Zrób {n} kliknięć', n: [500, 1000] },
+  { t: 'chests', txt: 'Otwórz {n} skrzynki', n: [2, 3] },
+  { t: 'kills', txt: 'Pokonaj {n} potworów', n: [50, 100] },
+  { t: 'skills', txt: 'Użyj umiejętności {n} razy', n: [2, 4] },
+  { t: 'golden', txt: 'Złap złoty skarb', n: [1, 1] },
+  { t: 'frenzy', txt: 'Wejdź w SZAŁ {n} razy', n: [3, 5] },
+  { t: 'crits', txt: 'Zadaj {n} krytyków', n: [100, 250] },
+];
+
+const LOGIN_REWARDS = [
+  { e: '🪙', d: 'Monety', coinsMin: 5 },
+  { e: '💎', d: '5 klejnotów', gems: 5 },
+  { e: '📦', d: 'Skrzynka', chest: 'common', n: 1 },
+  { e: '💎', d: '10 klejnotów', gems: 10 },
+  { e: '📦', d: '2 skrzynki', chest: 'common', n: 2 },
+  { e: '💎', d: '20 klejnotów', gems: 20 },
+  { e: '🎁', d: 'Rzadka skrzynka', chest: 'rare', n: 1 },
+];
+
+const CHESTS = {
+  common: { name: 'Zwykła skrzynka', e: '📦', drops: [['coins', 45], ['boost', 15], ['card', 30], ['artifact', 10]], price: 20 },
+  rare: { name: 'Rzadka skrzynka', e: '🎁', drops: [['coins', 25], ['boost', 20], ['card', 35], ['artifact', 20]], price: 60 },
+};
+const DROP_NAMES = { coins: '🪙 Monety', boost: '⚡ Boost ×3 (60 s)', card: '🃏 Karty pomocników', artifact: '🏺 Artefakt' };
+
+const WHEEL = [
+  { l: '🪙', d: 'Monety (2 min zarobków)', w: 25, col: '#7c3aed' },
+  { l: '💎5', d: '5 klejnotów', w: 22, col: '#2563eb' },
+  { l: '⚡', d: 'Boost ×3 na 60 s', w: 15, col: '#db2777' },
+  { l: '📦', d: 'Zwykła skrzynka', w: 15, col: '#059669' },
+  { l: '💎20', d: '20 klejnotów', w: 10, col: '#0891b2' },
+  { l: '💰', d: 'Monety (10 min zarobków)', w: 8, col: '#d97706' },
+  { l: '🎁', d: 'Rzadka skrzynka', w: 4, col: '#dc2626' },
+  { l: '🔮', d: '1 kryształ', w: 1, col: '#9333ea' },
+];
+
+const SKILLS = {
+  meteor: { name: 'Deszcz meteorów', cd: 300 },
+  freeze: { name: 'Zamrożenie', cd: 600 },
+  gold: { name: 'Złoty dotyk', cd: 480 },
+};
+
+/* Wydarzenia zależne od daty (month: 0 = styczeń, 9 = październik) */
+const EVENTS = [
+  { key: 'halloween', month: 9, name: 'Halloween', e: '🎃', cur: '🍬', curName: 'Cukierki',
+    mons: [['🎃', 'Dyniogłów'], ['👻', 'Upiorek'], ['🦇', 'Wampirek'], ['💀', 'Szkieletor'], ['🧟', 'Zombiak'], ['🕸️', 'Pajęczyniak']],
+    skin: 'pumpkin', skinName: 'Dyniowy motyw', skinD: 'Pomarańczowy wygląd, dyniowe cząsteczki, +5% monet', skinCost: 100 },
+  { key: 'xmas', month: 11, name: 'Święta', e: '🎄', cur: '🍪', curName: 'Pierniki',
+    mons: [['⛄', 'Zły bałwan'], ['🎅', 'Fałszywy Mikołaj'], ['🦌', 'Renifer'], ['🎁', 'Mimik-prezent'], ['🍪', 'Piernikowy ludek']],
+    skin: 'winter', skinName: 'Zimowy motyw', skinD: 'Śnieżny wygląd, +5% obrażeń', skinCost: 100 },
+];
+const SKIN_NAMES = { pumpkin: '🎃 Dyniowy motyw', winter: '❄️ Zimowy motyw' };
+
+/* =========================================================
+   3. STAN GRY, ZAPIS I ODCZYT (localStorage + try/catch)
+   ========================================================= */
+function defaultState() {
+  return {
+    v: 1, coins: 0, gems: 0, crystals: 0, crystalsTotal: 0,
+    level: 1, maxLevelRun: 1, maxLevelEver: 1, hp: 10, bossLeft: 30,
+    clickLvl: 0, critChanceLvl: 0, critMultLvl: 0,
+    helpers: [0, 0, 0, 0, 0], cards: [0, 0, 0, 0, 0], stars: [0, 0, 0, 0, 0],
+    chests: { common: 1, rare: 0 },
+    artifacts: {}, seen: {}, achievements: {}, talents: {},
+    stats: { clicks: 0, kills: 0, bosses: 0, prestiges: 0, chests: 0, golden: 0, frenzies: 0, crits: 0, skills: 0 },
+    boosts: { ad: 0, chest: 0, gold: 0, frenzy: 0, freeze: 0 },   // znaczniki czasu końca
+    skillsReady: { meteor: 0, freeze: 0, gold: 0 },
+    combo: 0,
+    daily: { date: '', quests: [], prog: {}, adBoosts: 0, freeSpin: true, adSpin: true },
+    login: { last: '', streak: 0, pending: false },
+    event: { key: '', cur: 0 },
+    skins: {}, skin: '',
+    settings: { vibrate: true },
+    lastSeen: Date.now(), nextGolden: 0, welcomed: false,
+  };
+}
+let S = defaultState();
+
+// Łączy zapis z domyślnym stanem – dzięki temu stare zapisy działają po aktualizacji gry
+function deepMerge(base, src) {
+  if (!src || typeof src !== 'object') return base;
+  for (const k in src) {
+    const v = src[k];
+    if (v && typeof v === 'object' && !Array.isArray(v) && base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) base[k] = deepMerge(base[k], v);
+    else if (v !== undefined) base[k] = v;
+  }
+  return base;
+}
+function save() {
+  if (R.noSave) return;
+  try { S.lastSeen = Date.now(); localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { console.warn('Zapis nieudany', e); }
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    S = deepMerge(defaultState(), JSON.parse(raw));
+    ['helpers', 'cards', 'stars'].forEach(k => { while (S[k].length < HELPERS.length) S[k].push(0); });
+    return true;
+  } catch (e) { console.warn('Odczyt nieudany', e); S = defaultState(); return false; }
+}
+
+/* Stan tymczasowy (nie zapisywany) */
+const R = {
+  B: null, cur: null, dying: false, lastTap: 0, lastTick: performance.now(), secAcc: 0,
+  dpsAcc: 0, lastDpsPop: 0, golden: null, goldenEnd: 0, tab: 'fight', moreSub: 'quests', colSub: 'monsters',
+  buyMult: 1, touching: false, wheelRot: 0, spinning: false, modalOpen: false, modalQueue: [],
+  offlineAmt: 0, newVersion: null,
+};
+
+/* =========================================================
+   4. BONUSY I WZORY (obrażenia, monety, koszty)
+   ========================================================= */
+const isBossLevel = l => l % 10 === 0;
+const worldIndex = l => Math.floor((l - 1) / 100) % WORLDS.length;
+const worldCycle = l => Math.floor((l - 1) / 100 / WORLDS.length);
+const lookIndex = l => Math.floor(((l - 1) % 100) / 5);           // nowy wygląd co 5 poziomów (0–19)
+const monsterMaxHp = l => 10 * Math.pow(1.15, l) * (isBossLevel(l) ? 5 : 1);   // HP = 10 × 1,15^poziom (boss ×5)
+const baseCoin = l => 10 * Math.pow(1.15, l) * 0.5;
+function worldSeenCount(w) { let c = 0; for (let i = 0; i < 20; i++) if (S.seen[w + '-' + i]) c++; return c; }
+const worldComplete = w => worldSeenCount(w) >= 20;
+
+function currentEvent() { const m = new Date().getMonth(); return EVENTS.find(e => e.month === m) || null; }
+
+// Sumuje wszystkie źródła trwałych bonusów
+function bonusAcc() {
+  const a = { dmg: 0, click: 0, dps: 0, coin: 0, critC: 0, critM: 0, offline: 0, offlineH: 0, gold: 0, frenzyT: 0, combo: 0, bossT: 0 };
+  const add = (t, v) => { a[t] = (a[t] || 0) + v; };
+  for (const x of ACHIEVEMENTS) if (S.achievements[x.id]) add(x.b[0], x.b[1]);
+  for (const t of TALENTS) { const l = S.talents[t.id] || 0; if (l) t.fx.forEach(f => add(f[0], f[1] * l)); }
+  for (const ar of ARTIFACTS) { const l = S.artifacts[ar.id] || 0; if (l) add(ar.t, ar.v * l); }
+  for (let w = 0; w < WORLDS.length; w++) if (worldComplete(w)) { add('dmg', .10); add('coin', .10); }
+  if (Object.keys(S.artifacts).length >= ARTIFACTS.length) add('dmg', .25);
+  if (S.skins.pumpkin) add('coin', .05);
+  if (S.skins.winter) add('dmg', .05);
+  return a;
+}
+const prestigeMult = () => 1 + S.crystalsTotal * 0.10;   // każdy zdobyty kryształ +10% obrażeń
+function globalBoost() { const n = Date.now(); return (S.boosts.ad > n ? 2 : 1) * (S.boosts.chest > n ? 3 : 1); }
+function clickDamage() {
+  const b = R.B;
+  return (1 + S.clickLvl) * Math.pow(2, Math.floor(S.clickLvl / 15)) * (1 + b.click) * (1 + b.dmg) * prestigeMult() * globalBoost();
+}
+function helperDps(i) {
+  const l = S.helpers[i]; if (!l) return 0;
+  return HELPERS[i].dps * l * Math.pow(2, Math.floor(l / 15)) * (1 + S.stars[i] * 0.75);
+}
+function dpsBase() {
+  let s = 0; for (let i = 0; i < HELPERS.length; i++) s += helperDps(i);
+  return s * (1 + R.B.dps) * (1 + R.B.dmg) * prestigeMult();
+}
+const totalDps = () => dpsBase() * globalBoost();
+const critChance = () => Math.min(.75, .05 + S.critChanceLvl * .01 + R.B.critC);
+const critMult = () => 2 + S.critMultLvl * .25 + R.B.critM;
+const coinMult = () => (1 + R.B.coin) * (S.boosts.gold > Date.now() ? 2 : 1);
+function incomePerSec() {
+  const rate = Math.max(totalDps(), clickDamage() * 4);
+  const kps = Math.min(3, rate / (10 * Math.pow(1.15, S.level)));
+  return kps * baseCoin(S.level) * coinMult();
+}
+function offlineRate() {
+  const kps = Math.min(3, dpsBase() / (10 * Math.pow(1.15, S.level)));
+  return kps * baseCoin(S.level) * (1 + R.B.coin);
+}
+// Koszt zakupu n poziomów (ciąg geometryczny); mode: 1, 10 lub 'max'
+function bulk(base, r, lvl, mode) {
+  const c0 = base * Math.pow(r, lvl);
+  let n = mode === 'max' ? Math.max(1, Math.floor(Math.log(S.coins * (r - 1) / c0 + 1) / Math.log(r))) : mode;
+  return { n, cost: c0 * (Math.pow(r, n) - 1) / (r - 1) };
+}
+const CLICK_R = 1.07, HELPER_R = 1.08;
+const critCCost = () => 100 * Math.pow(1.5, S.critChanceLvl);
+const critMCost = () => 250 * Math.pow(1.6, S.critMultLvl);
+const CRIT_C_MAX = 25, CRIT_M_MAX = 40;
+function cheapestUpgrade() {
+  const c = [10 * Math.pow(CLICK_R, S.clickLvl)];
+  HELPERS.forEach((h, i) => { if (i === 0 || S.helpers[i - 1] > 0 || S.helpers[i] > 0) c.push(h.cost * Math.pow(HELPER_R, S.helpers[i])); });
+  if (S.critChanceLvl < CRIT_C_MAX) c.push(critCCost());
+  if (S.critMultLvl < CRIT_M_MAX) c.push(critMCost());
+  return Math.min(...c);
+}
+function prestigeGain() { return S.maxLevelRun < 50 ? 0 : Math.floor(Math.pow(S.maxLevelRun / 50, 2.2) * 3); }
+function dprog(type, n = 1) { S.daily.prog[type] = (S.daily.prog[type] || 0) + n; }
+
+/* =========================================================
+   5. EFEKTY WIZUALNE (liczby, cząsteczki, monety)
+   ========================================================= */
+const arena = $('arena'), fx = $('fx'), monsterEl = $('monster'), monsterEmoji = $('monsterEmoji');
+function trimFx() { while (fx.childElementCount > 45) fx.firstChild.remove(); }
+function popText(x, y, text, cls) {
+  trimFx();
+  const d = document.createElement('div');
+  d.className = 'dmg ' + (cls || '');
+  d.textContent = text; d.style.left = x + 'px'; d.style.top = y + 'px';
+  fx.appendChild(d);
+  d.addEventListener('animationend', () => d.remove());
+}
+function particles(x, y, n, big) {
+  const cols = WORLDS[worldIndex(S.level)].col;
+  for (let i = 0; i < n; i++) {
+    trimFx();
+    const p = document.createElement('div');
+    const ang = Math.random() * Math.PI * 2, dist = rand(30, big ? 140 : 80);
+    p.className = 'pt';
+    if (S.skin === 'pumpkin' && Math.random() < .3) { p.className = 'pt em'; p.textContent = '🎃'; }
+    else if (S.skin === 'winter' && Math.random() < .3) { p.className = 'pt em'; p.textContent = '❄️'; }
+    else p.style.background = pick(cols);
+    p.style.left = x + 'px'; p.style.top = y + 'px';
+    p.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+    p.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+    fx.appendChild(p);
+    p.addEventListener('animationend', () => p.remove());
+  }
+}
+// Potwór „rozpada się” na kawałki
+function fragments(emoji) {
+  const r = arena.getBoundingClientRect(), x = r.width / 2, y = r.height / 2;
+  for (let i = 0; i < 7; i++) {
+    const p = document.createElement('div');
+    const ang = Math.random() * Math.PI * 2, dist = rand(70, 150);
+    p.className = 'pt em frag'; p.textContent = emoji;
+    p.style.left = (x - 17) + 'px'; p.style.top = (y - 17) + 'px';
+    p.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+    p.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+    p.style.setProperty('--r', rand(-360, 360) + 'deg');
+    fx.appendChild(p);
+    p.addEventListener('animationend', () => p.remove());
+  }
+}
+// Monety lecą do licznika na górze
+function coinBurst(cx, cy, n) {
+  const t = $('coinsBox').getBoundingClientRect(), tx = t.left + t.width / 2, ty = t.top + t.height / 2;
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement('div');
+    c.className = 'coinfly'; c.textContent = '🪙';
+    c.style.left = (cx - 11) + 'px'; c.style.top = (cy - 11) + 'px';
+    c.style.setProperty('--bx', rand(-70, 70) + 'px');
+    c.style.setProperty('--by', rand(-90, -10) + 'px');
+    c.style.setProperty('--tx', (tx - cx) + 'px');
+    c.style.setProperty('--ty', (ty - cy) + 'px');
+    c.style.animationDelay = (i * 35) + 'ms';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 1000 + i * 35);
+  }
+  setTimeout(() => { try { $('coinsBox').animate([{ transform: 'scale(1)' }, { transform: 'scale(1.15)' }, { transform: 'scale(1)' }], { duration: 250 }); } catch (e) { } }, 850);
+}
+function shake() {
+  try {
+    monsterEl.animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-7px,2px) rotate(-4deg) scale(.95)' },
+      { transform: 'translate(7px,-2px) rotate(4deg) scale(.95)' }, { transform: 'translate(0,0)' }], { duration: 140 });
+  } catch (e) { }
+}
+function restartAnim(el, cls) { el.classList.remove('dying', 'spawn'); void el.offsetWidth; if (cls) el.classList.add(cls); }
+function toast(msg, cls) {
+  const t = document.createElement('div');
+  t.className = 'toast ' + (cls || ''); t.innerHTML = msg;
+  $('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3100);
+  while ($('toasts').childElementCount > 4) $('toasts').firstChild.remove();
+}
+
+/* =========================================================
+   6. WALKA (potwory, bossowie, kliknięcia, combo, szał)
+   ========================================================= */
+function spawnMonster() {
+  const l = S.level, boss = isBossLevel(l), wi = worldIndex(l), w = WORLDS[wi], look = lookIndex(l);
+  let [em, name] = w.mons[look % 10], elite = look >= 10, ev = false;
+  const E = currentEvent();
+  if (E && !boss && Math.random() < 0.25) { [em, name] = pick(E.mons); ev = true; elite = false; }
+  if (!ev) S.seen[wi + '-' + look] = true;
+  R.cur = { boss, em, ev, elite, name: (elite ? 'Elitarny ' : '') + name, max: monsterMaxHp(l) };
+  S.hp = R.cur.max;
+  if (boss) S.bossLeft = 30 + R.B.bossT;
+  monsterEmoji.textContent = em;
+  monsterEmoji.style.filter = elite ? 'hue-rotate(150deg) saturate(1.6)' : '';
+  monsterEl.classList.toggle('boss', boss);
+  restartAnim(monsterEl, 'spawn');
+  const app = $('app');
+  WORLDS.forEach(x => app.classList.remove(x.cls));
+  app.classList.add(w.cls);
+  $('deco').textContent = w.deco;
+  setText($('monsterName'), (boss ? '👑 BOSS: ' : '') + R.cur.name + (ev ? ' ' + E.e : ''));
+  setText($('worldName'), w.icon + ' ' + w.name + (worldCycle(l) ? ' +' + worldCycle(l) : ''));
+}
+
+function onTap(e) {
+  e.preventDefault();
+  if (R.dying || !R.cur) return;
+  const now = Date.now();
+  S.stats.clicks++; dprog('clicks');
+  // Combo – napełnia się przy szybkim klikaniu
+  if (S.boosts.frenzy <= now) {
+    S.combo = Math.min(100, S.combo + 3.2 * (1 + R.B.combo));
+    if (S.combo >= 100) startFrenzy();
+  }
+  R.lastTap = performance.now();
+  let d = clickDamage();
+  const crit = Math.random() < critChance();
+  if (crit) { d *= critMult(); S.stats.crits++; dprog('crits'); }
+  if (S.boosts.frenzy > now) d *= 5;
+  const r = arena.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  popText(x, y - 10, (crit ? '💥' : '') + fmt(d), crit ? 'crit' : '');
+  particles(x, y, crit ? 10 : 5);
+  shake();
+  vibrate(crit ? 25 : 10);
+  dealDamage(d);
+}
+function dealDamage(d) {
+  if (R.dying) return;
+  S.hp -= d;
+  if (S.hp <= 0) { S.hp = 0; kill(); }
+}
+function startFrenzy() {
+  S.boosts.frenzy = Date.now() + (10 + R.B.frenzyT) * 1000;
+  S.combo = 0; S.stats.frenzies++; dprog('frenzy');
+  toast('🔥 SZAŁ! ×5 obrażeń!', 'gold');
+  vibrate([50, 30, 50]);
+}
+function kill() {
+  if (R.dying) return;
+  R.dying = true;
+  const c = R.cur, l = S.level;
+  const coins = baseCoin(l) * (c.boss ? 5 : 1) * coinMult();
+  S.coins += coins;
+  S.stats.kills++; dprog('kills');
+  const E = currentEvent();
+  if (c.ev && E) { S.event.cur += 1; }
+  const r = arena.getBoundingClientRect();
+  if (c.boss) {
+    S.stats.bosses++; dprog('boss');
+    const rare = Math.random() < 0.15;
+    S.chests[rare ? 'rare' : 'common']++;
+    toast(`👑 Boss pokonany! Zdobywasz ${rare ? '🎁 rzadką' : '📦'} skrzynkę`, 'gold');
+  }
+  fragments(c.em);
+  particles(r.width / 2, r.height / 2, 18, true);
+  popText(r.width / 2, r.height / 2 - 40, '+' + fmt(coins) + ' 🪙' + (c.ev && E ? ' +1' + E.cur : ''), 'coin');
+  coinBurst(r.left + r.width / 2, r.top + r.height / 2, c.boss ? 12 : 6);
+  restartAnim(monsterEl, 'dying');
+  vibrate(c.boss ? [60, 40, 60] : 35);
+  S.level++;
+  S.maxLevelRun = Math.max(S.maxLevelRun, S.level);
+  if (S.level > S.maxLevelEver) {
+    if (worldIndex(S.level) !== worldIndex(S.maxLevelEver) && (S.level - 1) % 100 === 0) toast(`🌍 Nowy świat: ${WORLDS[worldIndex(S.level)].icon} ${WORLDS[worldIndex(S.level)].name}!`, 'gold');
+    S.maxLevelEver = S.level;
+  }
+  setTimeout(() => { R.dying = false; spawnMonster(); }, 400);
+}
+function bossFail() {
+  R.dying = true;
+  toast('⏱️ Boss uciekł! Wracasz poziom niżej.');
+  vibrate(200);
+  S.level = Math.max(1, S.level - 1);
+  restartAnim(monsterEl, 'dying');
+  setTimeout(() => { R.dying = false; spawnMonster(); }, 400);
+}
+
+/* =========================================================
+   7. UMIEJĘTNOŚCI AKTYWNE, BONUS ZA REKLAMĘ, ZŁOTY POTWÓR
+   ========================================================= */
+function useSkill(id) {
+  const now = Date.now();
+  if (S.skillsReady[id] > now) {
+    showModal(`<h2>${SKILLS[id].name}</h2><p>Odnowienie: ${fmtTime((S.skillsReady[id] - now) / 1000)}</p>
+      <button class="btn blue wide" data-act="refreshSkill" data-arg="${id}">Odnów teraz za 10 💎</button>
+      <button class="btn ghost wide" data-act="closeModal">Anuluj</button>`);
+    return;
+  }
+  if (R.dying) { toast('Poczekaj na nowego potwora'); return; }
+  if (id === 'meteor') {
+    const d = clickDamage() * 50;
+    const r = arena.getBoundingClientRect();
+    for (let i = 0; i < 5; i++) {
+      const m = document.createElement('div');
+      m.className = 'meteor'; m.textContent = '☄️';
+      m.style.left = (r.width / 2 - 22 + rand(-50, 50)) + 'px'; m.style.top = (r.height / 2 - 22 + rand(-30, 30)) + 'px';
+      m.style.animationDelay = (i * 60) + 'ms';
+      fx.appendChild(m); setTimeout(() => m.remove(), 800);
+    }
+    setTimeout(() => {
+      popText(r.width / 2, r.height / 2 - 30, '☄️' + fmt(d), 'big');
+      particles(r.width / 2, r.height / 2, 20, true); shake(); vibrate([40, 20, 80]);
+      dealDamage(d);
+    }, 450);
+  } else if (id === 'freeze') {
+    if (!R.cur.boss) { toast('❄️ Zamrożenie działa tylko na bossa'); return; }
+    S.boosts.freeze = now + 10000;
+    toast('❄️ Czas bossa zatrzymany na 10 s!');
+  } else if (id === 'gold') {
+    S.boosts.gold = now + 30000;
+    toast('✨ Złoty dotyk: ×2 monety przez 30 s!', 'gold');
+  }
+  S.skillsReady[id] = now + SKILLS[id].cd * 1000;
+  S.stats.skills++; dprog('skills');
+  vibrate(30);
+}
+
+// Symulacja 5-sekundowej reklamy
+function showAd(cb) {
+  showModal(`<h2>📺 Reklama</h2><p class="sub">To tylko symulacja reklamy</p><div class="adbox">🎬</div>
+    <div class="bar"><div id="adFill" style="width:0"></div><span id="adTxt">5</span></div>`, { force: true });
+  let t = 0;
+  const iv = setInterval(() => {
+    t += 0.1;
+    const f = $('adFill'), tx = $('adTxt');
+    if (f) { f.style.width = Math.min(100, t / 5 * 100) + '%'; f.style.background = 'linear-gradient(90deg,#22d3ee,#a3e635)'; }
+    if (tx) tx.textContent = t >= 5 ? '✓' : Math.ceil(5 - t) + ' s';
+    if (t >= 5) { clearInterval(iv); closeModal(); cb(); }
+  }, 100);
+}
+function adBoost() {
+  if (S.daily.adBoosts >= 10) { toast('Limit 10 reklam dziennie wykorzystany'); return; }
+  showAd(() => {
+    S.daily.adBoosts++;
+    S.boosts.ad = Math.max(Date.now(), S.boosts.ad) + 180000;
+    toast('📺 ×2 obrażenia przez 3 minuty!', 'gold');
+  });
+}
+
+function goldenTick(now) {
+  if (!S.nextGolden) S.nextGolden = now + rand(120, 300) * 1000;
+  if (!R.golden && now >= S.nextGolden && R.tab === 'fight' && !R.modalOpen) {
+    const g = document.createElement('div');
+    g.id = 'golden'; g.innerHTML = '<span>💰</span>';
+    g.style.top = rand(15, 45) + '%';
+    g.addEventListener('pointerdown', catchGolden);
+    $('tab-fight').appendChild(g);
+    R.golden = g; R.goldenEnd = now + 6000;
+  }
+  if (R.golden && now > R.goldenEnd) {
+    R.golden.remove(); R.golden = null;
+    S.nextGolden = now + rand(120, 300) * 1000;
+  }
+}
+function catchGolden(e) {
+  e.preventDefault(); e.stopPropagation();
+  if (!R.golden) return;
+  const amt = Math.max(incomePerSec() * 60, baseCoin(S.level) * 10 * coinMult()) * (1 + R.B.gold);
+  S.coins += amt; S.stats.golden++; dprog('golden');
+  const r = R.golden.getBoundingClientRect();
+  coinBurst(r.left + r.width / 2, r.top + r.height / 2, 14);
+  toast(`💰 Złoty skarb! +${fmt(amt)} 🪙`, 'gold');
+  vibrate([30, 30, 30, 30, 60]);
+  R.golden.remove(); R.golden = null;
+  S.nextGolden = Date.now() + rand(120, 300) * 1000;
+}
+
+/* =========================================================
+   8. ULEPSZENIA I POMOCNICY
+   ========================================================= */
+function buyClick() {
+  const b = bulk(10, CLICK_R, S.clickLvl, R.buyMult);
+  if (S.coins < b.cost) return;
+  S.coins -= b.cost; S.clickLvl += b.n; vibrate(8); renderPanel();
+}
+function buyCritC() {
+  if (S.critChanceLvl >= CRIT_C_MAX || S.coins < critCCost()) return;
+  S.coins -= critCCost(); S.critChanceLvl++; vibrate(8); renderPanel();
+}
+function buyCritM() {
+  if (S.critMultLvl >= CRIT_M_MAX || S.coins < critMCost()) return;
+  S.coins -= critMCost(); S.critMultLvl++; vibrate(8); renderPanel();
+}
+function buyHelper(i) {
+  i = +i;
+  const b = bulk(HELPERS[i].cost, HELPER_R, S.helpers[i], R.buyMult);
+  if (S.coins < b.cost) return;
+  S.coins -= b.cost; S.helpers[i] += b.n; vibrate(8); renderPanel();
+}
+const cardsNeeded = i => (S.stars[i] + 1) * 2;
+function mergeCards(i) {
+  i = +i;
+  if (S.stars[i] >= 5 || S.cards[i] < cardsNeeded(i)) return;
+  S.cards[i] -= cardsNeeded(i); S.stars[i]++;
+  toast(`⭐ ${HELPERS[i].name} ma teraz ${S.stars[i]} ★ (×${(1 + S.stars[i] * .75).toFixed(2)} DPS)`, 'gold');
+  vibrate([20, 20, 40]); renderPanel();
+}
+
+/* =========================================================
+   9. SKRZYNKI
+   ========================================================= */
+function rollChest(type) {
+  const kind = weighted(CHESTS[type].drops), rare = type === 'rare';
+  if (kind === 'coins') {
+    const amt = Math.max(incomePerSec() * 120, baseCoin(S.level) * 10 * coinMult()) * (rare ? 4 : 1);
+    S.coins += amt; return { icon: '🪙', title: fmt(amt) + ' monet' };
+  }
+  if (kind === 'boost') {
+    S.boosts.chest = Math.max(Date.now(), S.boosts.chest) + 60000;
+    return { icon: '⚡', title: 'Boost ×3 obrażeń na 60 s' };
+  }
+  if (kind === 'card') {
+    const i = randInt(0, HELPERS.length - 1), n = rare ? randInt(3, 5) : randInt(1, 2);
+    S.cards[i] += n; return { icon: HELPERS[i].e, title: `${n}× karta: ${HELPERS[i].name}` };
+  }
+  const a = pick(ARTIFACTS), l = S.artifacts[a.id] || 0;
+  if (l >= 5) { S.gems += 25; return { icon: '💎', title: `${a.name} ma maks. poziom → 25 💎` }; }
+  S.artifacts[a.id] = l + 1;
+  return { icon: a.e, title: l ? `${a.name} → poziom ${l + 1}` : `Nowy artefakt: ${a.name}!` };
+}
+function openChest(type) {
+  if (S.chests[type] <= 0) return;
+  S.chests[type]--; S.stats.chests++; dprog('chests');
+  const res = rollChest(type);
+  showModal(`<h2>${CHESTS[type].name}</h2><div id="chestA"><div class="chestBig shake">${CHESTS[type].e}</div><p>Otwieranie…</p></div>
+    <div id="chestB" class="hidden"><div class="rays">${res.icon}</div><div class="big" style="font-size:20px">${res.title}</div>
+    <button class="btn wide" data-act="closeModal">Super!</button>
+    ${S.chests[type] > 0 ? `<button class="btn ghost wide" data-act="openAgain" data-arg="${type}">Otwórz kolejną (${S.chests[type]})</button>` : ''}</div>`);
+  vibrate([20, 40, 20, 40, 20]);
+  setTimeout(() => { const a = $('chestA'), b = $('chestB'); if (a && b) { a.classList.add('hidden'); b.classList.remove('hidden'); vibrate(60); } }, 950);
+  renderPanel();
+}
+function buyChest(type) {
+  const p = CHESTS[type].price;
+  if (S.gems < p) { toast('Za mało klejnotów 💎'); return; }
+  S.gems -= p; S.chests[type]++; toast(`Kupiono: ${CHESTS[type].name}`); renderPanel();
+}
+
+/* =========================================================
+   10. DZIENNE: zadania, logowanie, koło fortuny
+   ========================================================= */
+function rollQuests() {
+  const pool = QUEST_POOL.slice().sort(() => Math.random() - .5).slice(0, 3);
+  return pool.map((q, i) => {
+    let n = randInt(q.n[0], q.n[1]);
+    if (n >= 100) n = Math.round(n / 50) * 50;
+    return { t: q.t, txt: q.txt.replace('{n}', n), n, gems: [15, 20, 30][i], claimed: false };
+  });
+}
+function newDay() {
+  const today = todayKey();
+  S.daily = { date: today, quests: rollQuests(), prog: {}, adBoosts: 0, freeSpin: true, adSpin: true };
+  if (S.login.last !== today) {
+    S.login.streak = (S.login.last === yesterdayKey()) ? (S.login.streak % 7) + 1 : 1;   // przerwanie serii = reset
+    S.login.last = today; S.login.pending = true;
+    showLoginModal();
+  }
+  save();
+}
+function loginGrid() {
+  return `<div class="grid g4" style="grid-template-columns:repeat(7,1fr);gap:4px">` + LOGIN_REWARDS.map((r, i) => {
+    const day = i + 1, cls = day < S.login.streak || (day === S.login.streak && !S.login.pending) ? 'done' : day === S.login.streak ? 'today' : '';
+    return `<div class="cell ${cls}" style="font-size:20px">${r.e}<small>Dzień ${day}</small></div>`;
+  }).join('') + `</div>`;
+}
+function showLoginModal() {
+  const r = LOGIN_REWARDS[S.login.streak - 1];
+  showModal(`<h2>📅 Nagroda za logowanie</h2><p>Seria: <b>${S.login.streak}</b> / 7 dni</p>${loginGrid()}
+    <div class="rays" style="font-size:60px">${r.e}</div><div class="big" style="font-size:20px">${r.d}</div>
+    <p class="sub">Loguj się codziennie – 7. dzień to rzadka skrzynka! Przerwa resetuje serię.</p>
+    <button class="btn wide" data-act="claimLogin">Odbierz</button>`);
+}
+function claimLogin() {
+  if (!S.login.pending) { closeModal(); return; }
+  const r = LOGIN_REWARDS[S.login.streak - 1];
+  if (r.gems) S.gems += r.gems;
+  if (r.chest) S.chests[r.chest] += r.n;
+  if (r.coinsMin) S.coins += Math.max(incomePerSec() * 60 * r.coinsMin, baseCoin(S.level) * 20);
+  S.login.pending = false;
+  toast(`📅 Odebrano: ${r.d}`, 'gold');
+  closeModal(); renderPanel();
+}
+function claimQuest(i) {
+  const q = S.daily.quests[+i];
+  if (!q || q.claimed || (S.daily.prog[q.t] || 0) < q.n) return;
+  q.claimed = true; S.gems += q.gems; S.chests.common++;
+  toast(`✅ Zadanie wykonane! +${q.gems} 💎 +📦`, 'gold'); vibrate(30); renderPanel();
+}
+function spin(mode) {
+  if (R.spinning) return;
+  if (mode === 'free') { if (!S.daily.freeSpin) return; S.daily.freeSpin = false; doSpin(); }
+  else { if (!S.daily.adSpin) return; showAd(() => { S.daily.adSpin = false; setTab('more'); doSpin(); }); }
+}
+function doSpin() {
+  const i = weighted(WHEEL.map((w, k) => [k, w.w]));
+  const seg = 360 / WHEEL.length;
+  const target = 360 - (i * seg + seg / 2);
+  const cur = ((R.wheelRot % 360) + 360) % 360;
+  R.wheelRot += 360 * 5 + ((target - cur + 360) % 360);
+  R.spinning = true;
+  renderPanel();
+  requestAnimationFrame(() => { const w = $('wheel'); if (w) w.style.transform = `rotate(${R.wheelRot}deg)`; });
+  setTimeout(() => { R.spinning = false; giveWheel(i); renderPanel(); }, 4200);
+}
+function giveWheel(i) {
+  const w = WHEEL[i];
+  switch (i) {
+    case 0: S.coins += Math.max(incomePerSec() * 120, baseCoin(S.level) * 10); break;
+    case 1: S.gems += 5; break;
+    case 2: S.boosts.chest = Math.max(Date.now(), S.boosts.chest) + 60000; break;
+    case 3: S.chests.common++; break;
+    case 4: S.gems += 20; break;
+    case 5: S.coins += Math.max(incomePerSec() * 600, baseCoin(S.level) * 40); break;
+    case 6: S.chests.rare++; break;
+    case 7: S.crystals++; S.crystalsTotal++; break;
+  }
+  vibrate([30, 30, 80]);
+  showModal(`<h2>🎡 Wygrana!</h2><div class="rays">${w.l}</div><div class="big" style="font-size:20px">${w.d}</div><button class="btn wide" data-act="closeModal">Super!</button>`);
+}
+
+/* =========================================================
+   11. OSIĄGNIĘCIA, PRESTIŻ, TALENTY, WYDARZENIA
+   ========================================================= */
+function checkAchievements() {
+  for (const a of ACHIEVEMENTS) {
+    if (!S.achievements[a.id] && a.cond(S)) {
+      S.achievements[a.id] = Date.now();
+      S.gems += a.gems;
+      toast(`🏅 Osiągnięcie: <b>${a.name}</b><br><small>${a.bd} · +${a.gems} 💎</small>`, 'gold');
+      vibrate([40, 30, 40]);
+    }
+  }
+}
+function confirmPrestige() {
+  const g = prestigeGain();
+  if (!g) { toast('Prestiż dostępny od poziomu 50'); return; }
+  showModal(`<h2>🔮 Prestiż</h2><p>Zresetujesz poziom, monety, ulepszenia i pomocników.</p>
+    <p>Zachowasz klejnoty, kryształy, karty, artefakty, kolekcję, osiągnięcia i talenty.</p>
+    <div class="big">+${g} 🔮</div><p>Nowy bonus: +${Math.round((S.crystalsTotal + g) * 10)}% obrażeń</p>
+    <button class="btn purple wide" data-act="doPrestige">Odrodź się!</button><button class="btn ghost wide" data-act="closeModal">Anuluj</button>`);
+}
+function doPrestige() {
+  const g = prestigeGain(); if (!g) return;
+  S.crystals += g; S.crystalsTotal += g;
+  Object.assign(S, { coins: 0, level: 1, maxLevelRun: 1, clickLvl: 0, critChanceLvl: 0, critMultLvl: 0, helpers: [0, 0, 0, 0, 0], combo: 0 });
+  S.boosts.chest = 0; S.boosts.gold = 0; S.boosts.frenzy = 0; S.boosts.freeze = 0;
+  S.stats.prestiges++;
+  closeModal(); R.dying = false; R.B = bonusAcc(); spawnMonster(); setTab('fight');
+  toast(`🔮 Odrodzenie! +${g} kryształów`, 'gold'); vibrate([60, 40, 120]); save();
+}
+function talentCost(t) {
+  const pos = TALENTS.filter(x => x.br === t.br).indexOf(t);
+  return ((S.talents[t.id] || 0) + 1) * (pos + 1);
+}
+function buyTalent(id) {
+  const t = TALENTS.find(x => x.id === id), l = S.talents[id] || 0;
+  const br = TALENTS.filter(x => x.br === t.br), pos = br.indexOf(t);
+  if (l >= t.max) return;
+  if (pos > 0 && !(S.talents[br[pos - 1].id] > 0)) { toast('Najpierw odblokuj poprzedni talent'); return; }
+  const c = talentCost(t);
+  if (S.crystals < c) { toast('Za mało kryształów 🔮'); return; }
+  S.crystals -= c; S.talents[id] = l + 1; vibrate(20); renderPanel();
+}
+function eventBuy(id) {
+  const E = currentEvent(); if (!E) return;
+  const items = { skin: E.skinCost, rare: 40, boost: 15, gems: 20 };
+  const c = items[id];
+  if (id === 'skin' && S.skins[E.skin]) return;
+  if (S.event.cur < c) { toast(`Za mało: ${E.curName} ${E.cur}`); return; }
+  S.event.cur -= c;
+  if (id === 'skin') { S.skins[E.skin] = true; S.skin = E.skin; applySkin(); toast(`✨ Odblokowano: ${E.skinName}!`, 'gold'); }
+  if (id === 'rare') { S.chests.rare++; toast('🎁 Kupiono rzadką skrzynkę'); }
+  if (id === 'boost') { S.boosts.chest = Math.max(Date.now(), S.boosts.chest) + 60000; toast('⚡ Boost ×3 na 60 s'); }
+  if (id === 'gems') { S.gems += 15; toast('+15 💎'); }
+  renderPanel();
+}
+function applySkin() {
+  const app = $('app');
+  Object.keys(SKIN_NAMES).forEach(k => app.classList.remove('skin-' + k));
+  if (S.skin) app.classList.add('skin-' + S.skin);
+}
+
+/* =========================================================
+   12. ZAKŁADKI I RENDEROWANIE PANELI
+   ========================================================= */
+function setTab(t) {
+  R.tab = t;
+  document.querySelectorAll('.tab').forEach(s => s.classList.toggle('active', s.id === 'tab-' + t));
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.arg === t));
+  if (t !== 'fight' && R.golden) { R.golden.remove(); R.golden = null; S.nextGolden = Date.now() + 30000; }
+  renderPanel();
+  const p = $('tab-' + t); if (p && t !== 'fight' && p._lastSub !== (R.moreSub + R.colSub)) { p.scrollTop = 0; p._lastSub = R.moreSub + R.colSub; }
+}
+function renderPanel() {
+  const t = R.tab; if (t === 'fight') return;
+  const el = $('tab-' + t);
+  const html = t === 'upgrades' ? htmlUpgrades() : t === 'chests' ? htmlChests() : t === 'collection' ? htmlCollection() : htmlMore();
+  if (el._html !== html) { el._html = html; el.innerHTML = html; }
+}
+
+function htmlUpgrades() {
+  const m = R.buyMult;
+  const multChips = [1, 10, 'max'].map(x => `<button class="chip ${m === x ? 'on' : ''}" data-act="mult" data-arg="${x}">${x === 'max' ? 'MAX' : '×' + x}</button>`).join('');
+  const cb = bulk(10, CLICK_R, S.clickLvl, m);
+  let h = `<h2>⬆️ Ulepszenia</h2>
+  <div class="stat card"><div>👆 Kliknięcie: <b>${fmt(clickDamage())}</b></div><div>⚔️ DPS: <b>${fmt(totalDps())}</b></div>
+  <div>🎯 Kryt: <b>${Math.round(critChance() * 100)}%</b></div><div>💥 Mnożnik: <b>×${critMult().toFixed(2)}</b></div></div>
+  <div class="subnav">Kupuj: ${multChips}</div>
+  <div class="card row"><div class="ico">👆</div><div class="grow"><b>Siła kliknięcia</b><span class="lv">Poz. ${S.clickLvl}</span>
+  <div class="sub">Co 15 poziomów obrażenia ×2</div></div>
+  <button class="btn ${S.coins >= cb.cost ? '' : 'off'}" data-act="buyClick">+${cb.n}<br>🪙 ${fmt(cb.cost)}</button></div>
+  <div class="card row"><div class="ico">🎯</div><div class="grow"><b>Szansa krytyka</b><span class="lv">${S.critChanceLvl}/${CRIT_C_MAX}</span>
+  <div class="sub">+1% szansy za poziom</div></div>
+  ${S.critChanceLvl >= CRIT_C_MAX ? '<b class="done-t">MAX</b>' : `<button class="btn ${S.coins >= critCCost() ? '' : 'off'}" data-act="buyCritC">+1<br>🪙 ${fmt(critCCost())}</button>`}</div>
+  <div class="card row"><div class="ico">💥</div><div class="grow"><b>Mnożnik krytyka</b><span class="lv">${S.critMultLvl}/${CRIT_M_MAX}</span>
+  <div class="sub">+0,25× za poziom</div></div>
+  ${S.critMultLvl >= CRIT_M_MAX ? '<b class="done-t">MAX</b>' : `<button class="btn ${S.coins >= critMCost() ? '' : 'off'}" data-act="buyCritM">+1<br>🪙 ${fmt(critMCost())}</button>`}</div>
+  <h3>🧑‍🤝‍🧑 Pomocnicy (automatyczny DPS)</h3>`;
+  HELPERS.forEach((hp, i) => {
+    const unlocked = i === 0 || S.helpers[i - 1] > 0 || S.helpers[i] > 0;
+    if (!unlocked) { h += `<div class="card row" style="opacity:.5"><div class="ico">🔒</div><div class="grow"><b>${hp.name}</b><div class="sub">Kup poprzedniego pomocnika, by odblokować</div></div></div>`; return; }
+    const b = bulk(hp.cost, HELPER_R, S.helpers[i], m), st = S.stars[i], need = cardsNeeded(i);
+    const dps = helperDps(i) * (1 + R.B.dps) * (1 + R.B.dmg) * prestigeMult();
+    h += `<div class="card"><div class="row"><div class="ico">${hp.e}</div><div class="grow"><b>${hp.name}</b><span class="lv">Poz. ${S.helpers[i]}</span>
+    <div class="stars">${'★'.repeat(st)}${'☆'.repeat(5 - st)} <span class="sub">×${(1 + st * .75).toFixed(2)}</span></div>
+    <div class="sub">DPS: ${fmt(dps)}</div></div>
+    <button class="btn ${S.coins >= b.cost ? '' : 'off'}" data-act="buyHelper" data-arg="${i}">+${b.n}<br>🪙 ${fmt(b.cost)}</button></div>
+    <div class="row" style="margin-top:8px"><div class="grow"><div class="sub">🃏 Karty: ${S.cards[i]}${st < 5 ? ' / ' + need : ''} ${st >= 5 ? '· gwiazdki MAX' : ''}</div>
+    ${st < 5 ? `<div class="pbar"><div style="width:${Math.min(100, S.cards[i] / need * 100)}%"></div></div>` : ''}</div>
+    ${st < 5 ? `<button class="btn small purple ${S.cards[i] >= need ? '' : 'off'}" data-act="merge" data-arg="${i}">Połącz ⭐</button>` : ''}</div></div>`;
+  });
+  return h;
+}
+
+function htmlChests() {
+  let h = `<h2>📦 Skrzynki</h2><p class="sub" style="margin-bottom:10px">Zdobywasz je za bossów, zadania dzienne, logowanie i koło fortuny.</p>`;
+  for (const k of ['common', 'rare']) {
+    const c = CHESTS[k], tot = c.drops.reduce((s, d) => s + d[1], 0);
+    h += `<div class="card"><div class="row"><div class="ico" style="font-size:44px">${c.e}</div><div class="grow"><b>${c.name}</b>
+    <div class="sub">Posiadasz: <b style="color:#fff">${S.chests[k]}</b></div></div>
+    <button class="btn ${S.chests[k] > 0 ? '' : 'off'}" data-act="openChest" data-arg="${k}">Otwórz</button></div>
+    <table class="tbl">${c.drops.map(d => `<tr><td>${DROP_NAMES[d[0]]}</td><td>${Math.round(d[1] / tot * 100)}%</td></tr>`).join('')}</table>
+    <button class="btn blue wide small" data-act="buyChest" data-arg="${k}">Kup za ${c.price} 💎</button></div>`;
+  }
+  h += `<p class="sub">Karty pomocników łączysz w zakładce Ulepszenia, aby zwiększyć ich gwiazdki. Duplikaty artefaktów podnoszą ich poziom (maks. 5).</p>`;
+  return h;
+}
+
+function htmlCollection() {
+  const sub = R.colSub;
+  let h = `<h2>📖 Kolekcja</h2><div class="subnav">
+  <button class="chip ${sub === 'monsters' ? 'on' : ''}" data-act="col" data-arg="monsters">👾 Potwory</button>
+  <button class="chip ${sub === 'artifacts' ? 'on' : ''}" data-act="col" data-arg="artifacts">🏺 Artefakty</button></div>`;
+  if (sub === 'monsters') {
+    let total = 0; WORLDS.forEach((w, i) => total += worldSeenCount(i));
+    h += `<p class="sub" style="margin-bottom:8px">Odkryto ${total}/${WORLDS.length * 20}. Skompletuj świat: <b>+10% obrażeń i +10% monet</b> na stałe.</p>`;
+    WORLDS.forEach((w, wi) => {
+      const cnt = worldSeenCount(wi);
+      h += `<div class="card"><div class="row"><b class="grow">${w.icon} ${w.name}</b><span class="${cnt >= 20 ? 'done-t' : 'sub'}">${cnt >= 20 ? '✅ Bonus aktywny' : cnt + '/20'}</span></div><div class="grid" style="margin-top:8px">`;
+      for (let i = 0; i < 20; i++) {
+        const seen = S.seen[wi + '-' + i], m = w.mons[i % 10];
+        h += seen ? `<div class="cell"><span style="${i >= 10 ? 'filter:hue-rotate(150deg) saturate(1.6)' : ''}">${m[0]}</span><small>${i >= 10 ? 'Elit. ' : ''}${m[1]}</small></div>`
+          : `<div class="cell lock">❓<small>Poz. ${wi * 100 + i * 5 + 1}+</small></div>`;
+      }
+      h += `</div></div>`;
+    });
+  } else {
+    const have = Object.keys(S.artifacts).length;
+    h += `<p class="sub" style="margin-bottom:8px">Zebrano ${have}/${ARTIFACTS.length}. Komplet: <b>${have >= ARTIFACTS.length ? '✅ +25% obrażeń aktywne' : '+25% obrażeń'}</b>. Artefakty wypadają ze skrzynek.</p>`;
+    h += `<div class="grid g4">` + ARTIFACTS.map(a => {
+      const l = S.artifacts[a.id] || 0;
+      return l ? `<div class="cell">${a.e}<span class="cl">${l}/5</span><small>${a.name}<br>${a.d} ×${l}</small></div>` : `<div class="cell lock">❓<small>???</small></div>`;
+    }).join('') + `</div>`;
+  }
+  return h;
+}
+
+function moreDots() {
+  return {
+    quests: S.daily.quests.some(q => !q.claimed && (S.daily.prog[q.t] || 0) >= q.n),
+    login: S.login.pending, wheel: S.daily.freeSpin, prestige: false, talents: false,
+  };
+}
+function htmlMore() {
+  const subs = [['quests', '📋 Zadania'], ['login', '📅 Logowanie'], ['wheel', '🎡 Koło'], ['ach', '🏅 Osiągnięcia'], ['prestige', '🔮 Prestiż'], ['talents', '🌳 Talenty'], ['event', '🎉 Wydarzenia'], ['settings', '⚙️ Ustawienia']];
+  const dots = moreDots();
+  let h = `<div class="subnav">${subs.map(s => `<button class="chip ${R.moreSub === s[0] ? 'on' : ''}" data-act="more" data-arg="${s[0]}">${s[1]}${dots[s[0]] ? '<span class="dot"></span>' : ''}</button>`).join('')}</div>`;
+  const s = R.moreSub;
+
+  if (s === 'quests') {
+    const now = new Date(), mid = new Date(now); mid.setHours(24, 0, 0, 0);
+    h += `<h2>📋 Zadania dzienne</h2><p class="sub" style="margin-bottom:10px">Nowe zadania za ${fmtTime((mid - now) / 1000)}</p>`;
+    S.daily.quests.forEach((q, i) => {
+      const p = Math.min(q.n, S.daily.prog[q.t] || 0), done = p >= q.n;
+      h += `<div class="card"><div class="row"><div class="grow"><b>${q.txt}</b><div class="sub">Nagroda: ${q.gems} 💎 + 📦</div>
+      <div class="pbar"><div style="width:${p / q.n * 100}%"></div></div><div class="sub">${fmt(p)} / ${fmt(q.n)}</div></div>
+      ${q.claimed ? '<b class="done-t">✓</b>' : `<button class="btn small ${done ? 'green' : 'off'}" data-act="claimQuest" data-arg="${i}">Odbierz</button>`}</div></div>`;
+    });
+  }
+  else if (s === 'login') {
+    h += `<h2>📅 Seria logowań</h2><p style="margin-bottom:10px">Aktualna seria: <b>${S.login.streak}</b> / 7 dni</p>${loginGrid()}
+    <table class="tbl" style="margin-top:12px">${LOGIN_REWARDS.map((r, i) => `<tr><td>Dzień ${i + 1}</td><td>${r.e} ${r.d}</td></tr>`).join('')}</table>
+    <p class="sub" style="margin-top:8px">Pominięcie dnia resetuje serię do dnia 1.</p>
+    ${S.login.pending ? '<button class="btn wide" data-act="claimLogin">Odbierz dzisiejszą nagrodę</button>' : '<p class="done-t" style="margin-top:8px">✓ Dzisiejsza nagroda odebrana</p>'}`;
+  }
+  else if (s === 'wheel') {
+    const seg = 360 / WHEEL.length;
+    const grad = WHEEL.map((w, i) => `${w.col} ${i * seg}deg ${(i + 1) * seg}deg`).join(',');
+    const tot = WHEEL.reduce((a, w) => a + w.w, 0);
+    h += `<h2>🎡 Koło fortuny</h2><div id="wheelWrap"><div id="wheelPtr">🔻</div>
+    <div id="wheel" style="background:conic-gradient(${grad});transform:rotate(${R.wheelRot}deg)">
+    ${WHEEL.map((w, i) => `<div class="wseg" style="transform:rotate(${i * seg + seg / 2}deg)">${w.l}</div>`).join('')}</div><div id="wheelHub">🎰</div></div>
+    ${R.spinning ? '<p style="text-align:center">Kręci się…</p>' :
+      S.daily.freeSpin ? '<button class="btn wide" data-act="spin" data-arg="free">Darmowy obrót</button>' :
+        S.daily.adSpin ? '<button class="btn blue wide" data-act="spin" data-arg="ad">📺 Obrót za reklamę</button>' :
+          '<p style="text-align:center" class="sub">Wróć jutro po kolejne obroty!</p>'}
+    <h3>Szanse</h3><table class="tbl">${WHEEL.map(w => `<tr><td>${w.l} ${w.d}</td><td>${(w.w / tot * 100).toFixed(0)}%</td></tr>`).join('')}</table>`;
+  }
+  else if (s === 'ach') {
+    const got = ACHIEVEMENTS.filter(a => S.achievements[a.id]).length;
+    h += `<h2>🏅 Osiągnięcia</h2><p class="sub" style="margin-bottom:10px">Zdobyto ${got}/${ACHIEVEMENTS.length}. Każde daje trwały bonus.</p>`;
+    ACHIEVEMENTS.forEach(a => {
+      const ok = S.achievements[a.id];
+      h += `<div class="card row" style="${ok ? '' : 'opacity:.55'}"><div class="ico">${ok ? '🏅' : '🔒'}</div><div class="grow"><b>${a.name}</b>
+      <div class="sub">${a.desc}</div><div class="sub" style="color:#fde68a">${a.bd} · ${a.gems} 💎</div></div>${ok ? '<b class="done-t">✓</b>' : ''}</div>`;
+    });
+    h += `<h3>📊 Statystyki</h3><div class="stat"><div>Kliknięcia: ${fmt(S.stats.clicks)}</div><div>Potwory: ${fmt(S.stats.kills)}</div>
+    <div>Bossowie: ${fmt(S.stats.bosses)}</div><div>Skrzynki: ${fmt(S.stats.chests)}</div><div>Krytyki: ${fmt(S.stats.crits)}</div>
+    <div>Prestiże: ${S.stats.prestiges}</div><div>Rekord poz.: ${S.maxLevelEver}</div><div>Złote skarby: ${S.stats.golden}</div></div>`;
+  }
+  else if (s === 'prestige') {
+    const g = prestigeGain();
+    h += `<h2>🔮 Prestiż</h2><div class="card"><p>Od poziomu <b>50</b> możesz się odrodzić i zdobyć kryształy.</p>
+    <p class="sub">Każdy zdobyty kryształ to <b>+10% obrażeń</b> na zawsze (również po wydaniu na talenty).</p>
+    <div class="stat" style="margin-top:8px"><div>Kryształy: <b>${S.crystals}</b></div><div>Łącznie zdobyte: <b>${S.crystalsTotal}</b></div>
+    <div>Obecny bonus: <b>+${S.crystalsTotal * 10}%</b></div><div>Najwyższy poz.: <b>${S.maxLevelRun}</b></div></div>
+    <div class="big">${g ? '+' + g + ' 🔮' : 'Dotrzyj do poz. 50'}</div>
+    <button class="btn purple wide ${g ? '' : 'off'}" data-act="prestige">Odrodź się</button></div>`;
+  }
+  else if (s === 'talents') {
+    h += `<h2>🌳 Drzewko talentów</h2><p class="sub" style="margin-bottom:10px">Masz <b style="color:#fff">${S.crystals} 🔮</b>. Każdy talent wymaga odblokowania poprzedniego w gałęzi.</p>`;
+    [['click', '👆 KLIKACZ', ''], ['idle', '💤 IDLE', 'idle']].forEach(([br, title, cls]) => {
+      h += `<div class="branch ${cls}"><h3>${title}</h3>`;
+      const list = TALENTS.filter(t => t.br === br);
+      list.forEach((t, pos) => {
+        const l = S.talents[t.id] || 0, locked = pos > 0 && !(S.talents[list[pos - 1].id] > 0), c = talentCost(t);
+        h += `<div class="card row" style="${locked ? 'opacity:.5' : ''}"><div class="ico">${locked ? '🔒' : t.e}</div><div class="grow"><b>${t.name}</b><span class="lv">${l}/${t.max}</span>
+        <div class="sub">${t.d}</div></div>${l >= t.max ? '<b class="done-t">MAX</b>' : `<button class="btn small purple ${!locked && S.crystals >= c ? '' : 'off'}" data-act="talent" data-arg="${t.id}">${c} 🔮</button>`}</div>`;
+      });
+      h += `</div>`;
+    });
+  }
+  else if (s === 'event') {
+    const E = currentEvent();
+    if (E) {
+      const now = new Date(), end = new Date(now.getFullYear(), E.month + 1, 1), days = Math.ceil((end - now) / 864e5);
+      h += `<h2>${E.e} ${E.name}</h2><div class="card"><p>Wydarzenie trwa jeszcze <b>${days} dni</b>.</p>
+      <p class="sub">Co 4. potwór to potwór wydarzenia – daje ${E.cur} ${E.curName}.</p><div class="big">${E.cur} ${S.event.cur}</div></div>
+      <h3>Sklep wydarzenia</h3>
+      <div class="card row"><div class="ico">${E.e}</div><div class="grow"><b>${E.skinName}</b> <span class="lv">Limitowana</span><div class="sub">${E.skinD}</div></div>
+      ${S.skins[E.skin] ? '<b class="done-t">✓</b>' : `<button class="btn small" data-act="eventBuy" data-arg="skin">${E.skinCost} ${E.cur}</button>`}</div>
+      <div class="card row"><div class="ico">🎁</div><div class="grow"><b>Rzadka skrzynka</b></div><button class="btn small" data-act="eventBuy" data-arg="rare">40 ${E.cur}</button></div>
+      <div class="card row"><div class="ico">⚡</div><div class="grow"><b>Boost ×3 (60 s)</b></div><button class="btn small" data-act="eventBuy" data-arg="boost">15 ${E.cur}</button></div>
+      <div class="card row"><div class="ico">💎</div><div class="grow"><b>15 klejnotów</b></div><button class="btn small" data-act="eventBuy" data-arg="gems">20 ${E.cur}</button></div>`;
+    } else {
+      h += `<h2>🎉 Wydarzenia</h2><div class="card"><p>Brak aktywnego wydarzenia.</p><p class="sub">🎃 Halloween – październik · 🎄 Święta – grudzień</p></div>`;
+    }
+    const owned = Object.keys(S.skins).filter(k => S.skins[k]);
+    h += `<h3>🎨 Twoje skórki</h3>` + (owned.length ? owned.map(k => `<div class="card row"><div class="grow"><b>${SKIN_NAMES[k] || k}</b></div>
+      <button class="btn small ${S.skin === k ? 'ghost' : ''}" data-act="skin" data-arg="${k}">${S.skin === k ? 'Zdejmij' : 'Załóż'}</button></div>`).join('') : '<p class="sub">Jeszcze nie masz żadnych skórek.</p>');
+  }
+  else if (s === 'settings') {
+    h += `<h2>⚙️ Ustawienia</h2>
+    <div class="card row"><div class="grow"><b>📳 Wibracje</b><div class="sub">Nie działają na iPhone (ograniczenie Safari)</div></div>
+    <button class="btn small ${S.settings.vibrate ? 'green' : 'ghost'}" data-act="toggleVib">${S.settings.vibrate ? 'Wł.' : 'Wył.'}</button></div>
+    <div class="card"><b>🔄 Aktualizacje</b><div class="sub">Wersja gry: ${GAME_VERSION}. Gra sama sprawdza aktualizacje, a postęp zostaje zachowany.</div>
+    <button class="btn wide" data-act="checkUpd">Sprawdź aktualizacje</button></div>
+    <div class="card"><b>💾 Przenoszenie zapisu</b><div class="sub">Skopiuj kod, by przenieść grę na inne urządzenie.</div>
+    <div class="row" style="margin-top:8px"><button class="btn ghost grow" data-act="exportSave">Eksportuj</button><button class="btn ghost grow" data-act="importSave">Importuj</button></div></div>
+    <div class="card"><b>🗑️ Reset gry</b><div class="sub">Usuwa cały postęp bezpowrotnie.</div><button class="btn red wide" data-act="resetSave">Zresetuj grę</button></div>`;
+  }
+  return h;
+}
+
+/* =========================================================
+   13. OKNA MODALNE (z kolejką)
+   ========================================================= */
+function showModal(html, opts = {}) {
+  if (R.modalOpen && !opts.force) { R.modalQueue.push([html, opts]); return; }
+  R.modalOpen = true;
+  $('modalBox').innerHTML = html;
+  $('modal').classList.remove('hidden');
+}
+function closeModal(skipQueue) {
+  R.modalOpen = false;
+  $('modal').classList.add('hidden');
+  $('modalBox').innerHTML = '';
+  if (skipQueue !== true && R.modalQueue.length) { const [h, o] = R.modalQueue.shift(); showModal(h, o); }
+}
+
+/* =========================================================
+   14. ZAROBKI OFFLINE
+   ========================================================= */
+function checkOffline() {
+  const now = Date.now(), gap = (now - (S.lastSeen || now)) / 1000;
+  S.lastSeen = now;
+  if (gap < 60) return;
+  const secs = Math.min(gap, (8 + R.B.offlineH) * 3600);
+  const amt = offlineRate() * secs * Math.min(1.5, 0.5 + R.B.offline);
+  if (amt < 1) return;
+  R.offlineAmt = amt;
+  showModal(`<h2>😴 Witaj z powrotem!</h2><p>Twoi pomocnicy walczyli przez ${fmtTime(secs)}</p>
+    <p>Zarobiłeś:</p><div class="big">${fmt(amt)} 🪙</div>
+    <button class="btn blue wide" data-act="offlineAd">📺 ×2 za reklamę (${fmt(amt * 2)})</button>
+    <button class="btn wide" data-act="offlineClaim">Odbierz</button>`);
+}
+
+/* =========================================================
+   15. AKTUALIZACJE (sprawdza nową wersję pliku na GitHub Pages)
+   ========================================================= */
+async function checkUpdate(manual) {
+  try {
+    const base = location.href.split('#')[0].split('?')[0];
+    if (!/^https?:/.test(base)) { if (manual) toast('Aktualizacje działają po wrzuceniu gry na GitHub Pages'); return; }
+    const r = await fetch(base + '?u=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const txt = await r.text();
+    const m = txt.match(/GAME_VERSION\s*=\s*['"]([^'"]+)['"]/);
+    if (m && m[1] !== GAME_VERSION) {
+      R.newVersion = m[1];
+      $('updTxt').textContent = `🔄 Nowa wersja ${m[1]} jest dostępna!`;
+      $('updBanner').classList.remove('hidden');
+    } else if (manual) toast('✅ Masz najnowszą wersję (' + GAME_VERSION + ')');
+  } catch (e) { if (manual) toast('Nie udało się sprawdzić – brak internetu?'); }
+}
+function doUpdate() {
+  save();
+  const base = location.href.split('#')[0].split('?')[0];
+  location.replace(base + '?v=' + encodeURIComponent(R.newVersion || Date.now()));
+}
+
+/* =========================================================
+   16. AKCJE PRZYCISKÓW (jeden wspólny handler)
+   ========================================================= */
+const ACTIONS = {
+  tab: a => setTab(a),
+  more: a => { R.moreSub = a; renderPanel(); $('tab-more').scrollTop = 0; },
+  col: a => { R.colSub = a; renderPanel(); },
+  goEvent: () => { R.moreSub = 'event'; setTab('more'); },
+  mult: a => { R.buyMult = a === 'max' ? 'max' : +a; renderPanel(); },
+  buyClick, buyCritC, buyCritM,
+  buyHelper: a => buyHelper(a), merge: a => mergeCards(a),
+  skill: a => useSkill(a),
+  refreshSkill: a => {
+    if (S.gems < 10) { toast('Za mało klejnotów 💎'); return; }
+    S.gems -= 10; S.skillsReady[a] = 0; closeModal(); toast('⚡ Umiejętność odnowiona!');
+  },
+  adBoost,
+  openChest: a => openChest(a),
+  openAgain: a => { closeModal(true); openChest(a); },
+  buyChest: a => buyChest(a),
+  claimQuest: a => claimQuest(a), claimLogin,
+  spin: a => spin(a),
+  prestige: confirmPrestige, doPrestige,
+  talent: a => buyTalent(a),
+  eventBuy: a => eventBuy(a),
+  skin: a => { S.skin = S.skin === a ? '' : a; applySkin(); renderPanel(); },
+  toggleVib: () => { S.settings.vibrate = !S.settings.vibrate; renderPanel(); vibrate(30); },
+  checkUpd: () => checkUpdate(true), doUpdate,
+  closeModal: () => closeModal(),
+  offlineClaim: () => { S.coins += R.offlineAmt; toast(`+${fmt(R.offlineAmt)} 🪙`); R.offlineAmt = 0; closeModal(); },
+  offlineAd: () => { const a = R.offlineAmt; R.offlineAmt = 0; closeModal(true); showAd(() => { S.coins += a * 2; toast(`📺 +${fmt(a * 2)} 🪙`, 'gold'); }); },
+  exportSave: () => {
+    save();
+    let code = '';
+    try { code = btoa(unescape(encodeURIComponent(JSON.stringify(S)))); } catch (e) { }
+    showModal(`<h2>💾 Eksport</h2><p class="sub">Skopiuj ten kod i zachowaj go:</p><textarea id="expTxt" readonly>${code}</textarea>
+      <button class="btn wide" data-act="copyExport">Kopiuj</button><button class="btn ghost wide" data-act="closeModal">Zamknij</button>`);
+  },
+  copyExport: () => {
+    const t = $('expTxt'); if (!t) return;
+    try { navigator.clipboard.writeText(t.value).then(() => toast('Skopiowano!'), () => { t.select(); document.execCommand('copy'); toast('Skopiowano!'); }); }
+    catch (e) { t.select(); try { document.execCommand('copy'); toast('Skopiowano!'); } catch (e2) { } }
+  },
+  importSave: () => showModal(`<h2>💾 Import</h2><p class="sub">Wklej kod zapisu:</p><textarea id="impTxt"></textarea>
+      <button class="btn wide" data-act="doImport">Wczytaj</button><button class="btn ghost wide" data-act="closeModal">Anuluj</button>`),
+  doImport: () => {
+    try {
+      const data = JSON.parse(decodeURIComponent(escape(atob($('impTxt').value.trim()))));
+      if (!data || typeof data.level !== 'number') throw new Error('zły kod');
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      R.noSave = true; location.reload();
+    } catch (e) { toast('❌ Nieprawidłowy kod zapisu'); }
+  },
+  resetSave: () => showModal(`<h2>🗑️ Na pewno?</h2><p>Stracisz cały postęp!</p>
+      <button class="btn red wide" data-act="doReset">Tak, usuń wszystko</button><button class="btn ghost wide" data-act="closeModal">Anuluj</button>`),
+  doReset: () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) { } R.noSave = true; location.reload(); },
+};
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  const fn = ACTIONS[b.dataset.act];
+  if (fn) fn(b.dataset.arg, b);
+});
+
+/* =========================================================
+   17. AKTUALIZACJA EKRANU WALKI (co klatkę logiki)
+   ========================================================= */
+function updateFightUI(now) {
+  setText($('coins'), fmt(S.coins));
+  setText($('gems'), fmt(S.gems));
+  setText($('crystals'), fmt(S.crystals));
+  if (!R.cur) return;
+  setText($('levelTxt'), 'Poziom ' + S.level);
+  $('hpFill').style.width = Math.max(0, S.hp / R.cur.max * 100) + '%';
+  setText($('hpTxt'), `❤️ ${fmt(S.hp)} / ${fmt(R.cur.max)}`);
+  // Licznik bossa
+  const frozen = S.boosts.freeze > now;
+  $('bossBar').classList.toggle('hidden', !R.cur.boss);
+  if (R.cur.boss) {
+    const tot = 30 + R.B.bossT;
+    $('bossFill').style.width = Math.max(0, S.bossLeft / tot * 100) + '%';
+    setText($('bossTxt'), `⏱️ ${Math.max(0, S.bossLeft).toFixed(1)} s${frozen ? ' ❄️ ZAMROŻONY' : ''}`);
+  }
+  monsterEl.classList.toggle('frozen', frozen && R.cur.boss);
+  // Combo / szał
+  const frenzy = S.boosts.frenzy > now;
+  $('app').classList.toggle('frenzy', frenzy);
+  if (frenzy) {
+    const left = (S.boosts.frenzy - now) / 1000;
+    $('comboFill').style.width = (left / (10 + R.B.frenzyT) * 100) + '%';
+    setText($('comboTxt'), `🔥 SZAŁ ×5 — ${Math.ceil(left)} s`);
+  } else {
+    $('comboFill').style.width = S.combo + '%';
+    setText($('comboTxt'), S.combo > 1 ? `⚡ COMBO ${Math.floor(S.combo)}%` : 'Klikaj szybko, by napełnić COMBO');
+  }
+  // Umiejętności
+  for (const id in SKILLS) {
+    const el = $('sk-' + id), left = (S.skillsReady[id] - now) / 1000;
+    el.querySelector('.cd').style.height = left > 0 ? (left / SKILLS[id].cd * 100) + '%' : '0';
+    setText(el.querySelector('.ct'), left > 0 ? fmtTime(left) : '');
+    el.classList.toggle('act', (id === 'freeze' && frozen) || (id === 'gold' && S.boosts.gold > now));
+  }
+  // Bonus za reklamę
+  const adLeft = (S.boosts.ad - now) / 1000;
+  setText($('adCnt'), `${S.daily.adBoosts}/10`);
+  setText($('adLbl'), adLeft > 0 ? `×2 · ${fmtTime(adLeft)}` : '×2 obr. 3 min');
+  $('adBtn').classList.toggle('act', adLeft > 0);
+  // Aktywne boosty
+  const chips = [];
+  if (adLeft > 0) chips.push(`📺 ×2 obr. ${fmtTime(adLeft)}`);
+  if (S.boosts.chest > now) chips.push(`⚡ ×3 obr. ${fmtTime((S.boosts.chest - now) / 1000)}`);
+  if (S.boosts.gold > now) chips.push(`✨ ×2 monety ${fmtTime((S.boosts.gold - now) / 1000)}`);
+  const dps = totalDps();
+  if (dps > 0) chips.push(`⚔️ DPS ${fmt(dps)}`);
+  const ch = chips.map(c => `<span class="bchip">${c}</span>`).join('');
+  const bx = $('boosts'); if (bx._h !== ch) { bx._h = ch; bx.innerHTML = ch; }
+  // Pasek do następnego ulepszenia
+  const c = cheapestUpgrade();
+  $('nextFill').style.width = Math.min(100, S.coins / c * 100) + '%';
+  setText($('nextTxt'), S.coins >= c ? '✅ Możesz kupić ulepszenie! Dotknij' : `Do następnego ulepszenia brakuje ${fmt(c - S.coins)} 🪙`);
+  // Pasek wydarzenia
+  const E = currentEvent();
+  $('eventBar').classList.toggle('hidden', !E);
+  if (E) setText($('eventBar'), `${E.e} ${E.name}! ${E.cur} ${S.event.cur} · dotknij, by otworzyć sklep`);
+}
+function updateBadges() {
+  $('dot-chests').classList.toggle('hidden', !(S.chests.common + S.chests.rare > 0));
+  $('dot-upgrades').classList.toggle('hidden', !(S.coins >= cheapestUpgrade()));
+  const d = moreDots();
+  $('dot-more').classList.toggle('hidden', !(d.quests || d.login || d.wheel));
+}
+
+/* =========================================================
+   18. GŁÓWNA PĘTLA GRY
+   ========================================================= */
+function tick() {
+  const t = performance.now();
+  let dt = (t - R.lastTick) / 1000; R.lastTick = t;
+  if (dt > 1) dt = 1;
+  const now = Date.now();
+  R.B = bonusAcc();
+  if (!R.dying && R.cur) {
+    const dps = totalDps();
+    if (dps > 0) {
+      S.hp -= dps * dt; R.dpsAcc += dps * dt;
+      if (t - R.lastDpsPop > 1000) {
+        R.lastDpsPop = t;
+        if (R.tab === 'fight' && R.dpsAcc > 0) { const r = arena.getBoundingClientRect(); popText(r.width / 2 + rand(-60, 60), r.height / 2 + rand(-40, 20), '⚔️' + fmt(R.dpsAcc), 'dps'); }
+        R.dpsAcc = 0;
+      }
+      if (S.hp <= 0) { S.hp = 0; kill(); }
+    }
+    if (R.cur.boss && !R.dying) {
+      if (S.boosts.freeze <= now) S.bossLeft -= dt;
+      if (S.bossLeft <= 0) bossFail();
+    }
+  }
+  // Combo opada, gdy gracz przestaje klikać
+  if (S.boosts.frenzy <= now && t - R.lastTap > 400 && S.combo > 0) S.combo = Math.max(0, S.combo - 22 * dt);
+  goldenTick(now);
+  updateFightUI(now);
+  R.secAcc += dt;
+  if (R.secAcc >= 1) { R.secAcc = 0; everySecond(); }
+}
+function everySecond() {
+  checkAchievements();
+  if (todayKey() !== S.daily.date) newDay();
+  const E = currentEvent();
+  if (E && S.event.key !== E.key) S.event = { key: E.key, cur: 0 };
+  if (!R.touching && !(R.spinning && R.tab === 'more')) renderPanel();
+  updateBadges();
+}
+
+/* =========================================================
+   19. START GRY
+   ========================================================= */
+function init() {
+  const had = load();
+  R.B = bonusAcc();
+  applySkin();
+  spawnMonster();
+  arena.addEventListener('pointerdown', onTap);
+  arena.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('pointerdown', () => { R.touching = true; }, true);
+  document.addEventListener('pointerup', () => { R.touching = false; }, true);
+  document.addEventListener('pointercancel', () => { R.touching = false; }, true);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) save();
+    else { R.lastTick = performance.now(); R.B = bonusAcc(); checkOffline(); checkUpdate(false); }
+  });
+  window.addEventListener('pagehide', () => { if (!R.noSave) save(); });
+  if (had) checkOffline();
+  if (todayKey() !== S.daily.date) newDay();
+  if (!S.welcomed) {
+    S.welcomed = true;
+    showModal(`<h2>👹 Monster Tap</h2><p>Stukaj w potwora, zdobywaj monety i ulepszaj bohatera!</p>
+      <p class="sub">⚡ Szybkie klikanie = SZAŁ ×5 · 👑 Co 10 poziom boss na czas · 💰 Łap złoty skarb · 🌍 Co 100 poziomów nowy świat</p>
+      <button class="btn wide" data-act="closeModal">Graj!</button>`);
+  }
+  const E = currentEvent();
+  if (E && S.event.key !== E.key) S.event = { key: E.key, cur: 0 };
+  setTab('fight');
+  setInterval(tick, 100);
+  setInterval(() => { if (!R.noSave) save(); }, 10000);   // autozapis co 10 s
+  setTimeout(() => checkUpdate(false), 3000);
+  setInterval(() => checkUpdate(false), 15 * 60 * 1000);
+}
+init();
+</script>
+</body>
+</html>
