@@ -366,7 +366,7 @@ h3{font-size:16px;margin:12px 0 8px}
    Zmień GAME_VERSION przy każdej aktualizacji na GitHubie –
    gracze zobaczą pasek „Aktualizuj”, a postęp zostanie zachowany.
    ========================================================= */
-const GAME_VERSION = '1.5.3';
+const GAME_VERSION = '1.6.0';
 const SAVE_KEY = 'monsterTap_save_v1';
 
 const $ = id => document.getElementById(id);
@@ -581,6 +581,8 @@ const MERCHANT_POOL = [
   { id: 'xp', e: '📅', n: '+300 XP przepustki', d: 'Szybszy sezon', p: 50, w: 8 },
 ];
 /* Przepustka sezonowa */
+/* Skórki bohatera 1/1 */
+const HERO_SKINS = { viamio: { n: 'Viamio', img: 'items/hero-viamio.png', d: 'Jedyna taka postać w grze' } };
 const SEASON_TIERS = 30, SEASON_XP = 250, SEASON_PRICE = 500;
 
 const UP_CHANCE = [1, 1, 1, 1, 1, 1, .8, .65, .5, .35];   // szansa na ulepszenie z +N na +N+1
@@ -618,7 +620,7 @@ function defaultState() {
     artifacts: {}, seen: {}, achievements: {}, talents: {},
     stats: { clicks: 0, kills: 0, bosses: 0, prestiges: 0, chests: 0, golden: 0, frenzies: 0, crits: 0, skills: 0, upgrades: 0, legendary: 0, bestUp: 0, weak: 0, fusions: 0, mythic: 0 },
     items: [], equip: { weapon: null, helmet: null, armor: null, boots: null, amulet: null }, stones: 0, starter: false, uniques: {}, tester: false,
-    luck: 0, cls: '', capes: {}, capeOn: false,
+    luck: 0, cls: '', capes: {}, capeOn: false, heroSkins: {}, heroSkin: '',
     village: { b: { forge: 0, mine: 0, tavern: 0, tower: 0, vault: 0 }, build: null, mineT: 0 },
     merchant: { next: 0, until: 0, offers: [] },
     season: { key: '', xp: 0, prem: false, cf: {}, cp: {} },
@@ -1256,6 +1258,16 @@ function amuletSVG(am) {
   return `<g${fAttr(Math.max(am.l, am.r >= 3 ? 3 : 0))}><path d="M50 61 Q60 75 70 61" stroke="#facc15" stroke-width="1.3" fill="none"/><circle cx="60" cy="72" r="4.5" fill="${RARITY[am.r].c}" stroke="#fff" stroke-width="1"/></g>`;
 }
 function heroSVG(eq, fx = true) {
+  if (S.heroSkin && HERO_SKINS[S.heroSkin] && S.heroSkins[S.heroSkin]) {   // skórka 1/1 ze zdjęcia
+    const w = eq.weapon, full = legendarySet(eq);
+    let s = `<svg viewBox="0 0 130 160" class="herosvg" xmlns="http://www.w3.org/2000/svg">`;
+    if (fx && (full || SLOT_ORDER.some(k => eq[k] && eq[k].l >= 9))) s += `<ellipse class="aura" cx="62" cy="80" rx="60" ry="76" fill="url(#auraG)"/>`;
+    s += `<ellipse cx="60" cy="149" rx="32" ry="5" fill="rgba(0,0,0,.35)"/>`;
+    if (full) s += `<g transform="translate(0 -6)">${wingSVG()}</g>`;
+    s += `<image href="${HERO_SKINS[S.heroSkin].img}" x="18.75" y="-2" width="82.5" height="150"/>`;
+    s += `<g class="warm" style="transform-origin:91px 129px"><g transform="translate(91 129) rotate(25)">${w ? weaponSVG(w, fx) : ''}</g></g>`;
+    return s + '</svg>';
+  }
   const w = eq.weapon, h = eq.helmet, a = eq.armor, sl = sleeveColor(a), skin = '#f1c27d';
   const full = legendarySet(eq), hand = isLeg(a) ? GOLD : skin, leg = isLeg(eq.boots) ? GOLD : '#6b4a2e';
   let s = `<svg viewBox="0 0 130 160" class="herosvg" xmlns="http://www.w3.org/2000/svg">`;
@@ -1394,7 +1406,11 @@ function salvageJunk() {
 function htmlHero() {
   const eq = equippedAll();
   const stats = SLOT_ORDER.filter(s => eq[s]).map(s => `<div>${SLOTS[s].e} ${SLOTS[s].fmt(itemValue(eq[s]))}</div>`).join('') || '<div class="sub">Załóż przedmioty, by zdobyć bonusy</div>';
+  const owned = Object.keys(S.heroSkins).filter(k => S.heroSkins[k] && HERO_SKINS[k]);
   let h = `<h2>🗡️ Bohater</h2><div class="card"><div class="heroPrev">${heroSVG(eq)}</div><div class="stat">${stats}</div></div>
+  ${owned.map(k => `<div class="card row legset"><div class="slotIco icell myth" style="--rc:#ffd700;position:relative;padding:0;overflow:visible"><img class="uimg" src="${HERO_SKINS[k].img}" style="object-fit:cover;object-position:top" alt=""><span class="one">1/1</span></div>
+    <div class="grow"><b style="color:#ffd700">Skórka: ${HERO_SKINS[k].n}</b><div class="sub">🏆 ${HERO_SKINS[k].d}</div></div>
+    <button class="btn small ${S.heroSkin === k ? 'green' : ''}" data-act="heroSkin" data-arg="${k}">${S.heroSkin === k ? 'Założona' : 'Załóż'}</button></div>`).join('')}
   <div class="card row legset"><div class="ico">👑</div><div class="grow"><b>Legendarny komplet: ${legCount(eq)}/5</b><div class="sub">${legendarySet(eq) ? '✅ Aktywny: złoty rycerz ze skrzydłami, +50% obrażeń, +25% monet' : 'Załóż 5 legendarnych przedmiotów: złota zbroja, skrzydła, +50% obrażeń i +25% monet'}</div></div></div>
   <div class="card row"><div class="ico">💠</div><div class="grow"><b>Kamienie ulepszeń: ${S.stones}</b><div class="sub">Z bossów i z rozbierania przedmiotów</div></div></div>
   ${htmlClassCard()}
@@ -2214,7 +2230,7 @@ function htmlMore() {
     const T = (a, l, c = 'ghost') => `<button class="btn small ${c}" data-act="t" data-arg="${a}">${l}</button>`;
     h += `<p class="sub" style="margin-bottom:10px">Narzędzia do testowania. Zmieniają Twój zapis gry.</p>
     <h3>💰 Zasoby</h3><div class="tgrid">${T('coins', '+🪙 dużo monet')}${T('gems', '+1000 💎')}${T('stones', '+100 💠')}${T('crystals', '+10 🔮')}${T('chests', '+5 📦 +5 🎁')}${T('cards', '+10 kart 🃏')}${T('candy', '+100 🍬')}${T('eventcur', 'Reset dnia (zadania, koło)')}</div>
-    <h3>⚔️ Przedmioty</h3><div class="tgrid">${RARITY.slice(0, 5).map((r, i) => T('item' + i, `<span style="color:${r.c}">${r.n}</span>`)).join('')}${T('sun', '🏆 Ostrze 1/1', 'purple')}${T('wup', 'Broń +1')}${T('legset', '👑 Legendarny komplet')}${T('clearbag', '🗑️ Wyczyść plecak')}</div>
+    <h3>⚔️ Przedmioty</h3><div class="tgrid">${RARITY.slice(0, 5).map((r, i) => T('item' + i, `<span style="color:${r.c}">${r.n}</span>`)).join('')}${T('sun', '🏆 Ostrze 1/1', 'purple')}${T('wup', 'Broń +1')}${T('legset', '👑 Legendarny komplet')}${T('skinme', '🏆 Skórka 1/1: Viamio', 'purple')}${T('clearbag', '🗑️ Wyczyść plecak')}</div>
     <h3>👹 Walka</h3><div class="tgrid">${T('kill', 'Zabij potwora')}${T('boss', 'Następny boss')}${T('lvl10', 'Poziom +10')}${T('lvl100', 'Poziom +100')}${T('lvlm10', 'Poziom −10')}${T('frenzy', '🔥 Szał teraz')}${T('golden', '💰 Złoty skarb')}${T('cd', 'Odnów umiejętności')}${T('offline', '😴 Test offline 2 h')}${T('god', R.god ? '🧪 ×1000 WŁ.' : '🧪 ×1000 obrażeń', R.god ? 'green' : 'ghost')}</div>
     <h3>🆕 Nowości</h3><div class="tgrid">${T('merchant', '🧳 Kupiec teraz')}${T('xp', '+500 XP przepustki')}${T('build', '🏰 Dokończ budowę')}${T('luck', '+5 🍀')}${T('cls', '🧙 Odblokuj/zmień klasę')}${T('fuse', '+3 epickie (fuzja)')}</div>
     <button class="btn red wide" data-act="t" data-arg="off">Ukryj panel testera</button>`;
@@ -2249,6 +2265,7 @@ function testerAct(a) {
     case 'eventcur': S.daily.date = ''; S.login.last = ''; break;
     case 'sun': if (S.uniques.sunblade) { toast('Masz już Ostrze – to unikat 1/1'); return; } giveUnique('sunblade'); break;
     case 'wup': { const w = equippedItem('weapon'); if (w) w.l = Math.min(MAX_UP, w.l + 1); break; }
+    case 'skinme': S.heroSkins.viamio = true; S.heroSkin = 'viamio'; toast('🏆 Odblokowano skórkę 1/1: Viamio!', 'gold'); break;
     case 'legset': SLOT_ORDER.forEach(sl => { const it = newItem(sl, 4); S.items.push(it); S.equip[sl] = it.id; }); break;
     case 'clearbag': S.items = S.items.filter(it => it.u || Object.values(S.equip).includes(it.id)); break;
     case 'kill': if (!R.dying) dealDamage(S.hp + 1); break;
@@ -2386,6 +2403,7 @@ const ACTIONS = {
   goMerchant: () => { R.moreSub = 'merchant'; setTab('more'); },
   sClaim: a => seasonClaim(a),
   sPrem: () => seasonBuyPrem(),
+  heroSkin: a => { S.heroSkin = S.heroSkin === a ? '' : a; renderHero(); renderPanel(); },
   capeToggle: () => { S.capeOn = !S.capeOn; renderHero(); renderPanel(); },
   toggleVib: () => { S.settings.vibrate = !S.settings.vibrate; renderPanel(); vibrate(30); },
   checkUpd: () => checkUpdate(true), doUpdate,
