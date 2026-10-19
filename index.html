@@ -366,7 +366,7 @@ h3{font-size:16px;margin:12px 0 8px}
    Zmień GAME_VERSION przy każdej aktualizacji na GitHubie –
    gracze zobaczą pasek „Aktualizuj”, a postęp zostanie zachowany.
    ========================================================= */
-const GAME_VERSION = '1.6.2';
+const GAME_VERSION = '1.6.3';
 const SAVE_KEY = 'monsterTap_save_v1';
 
 const $ = id => document.getElementById(id);
@@ -583,6 +583,8 @@ const MERCHANT_POOL = [
 /* Przepustka sezonowa */
 /* Główny bohater gry */
 const HERO = { n: 'Terminator', img: 'items/hero-viamio.png' };
+// dopasowanie rysowanych przedmiotów do zdjęcia (h = hełm, a = zbroja, m = amulet); buty niewidoczne – zdjęcie ucięte na udach
+const HF = { hx: 15.3, hy: -15.2, hs: .75, ax: -3.9, ay: -32.3, asx: 1.07, asy: 1.2, mx: .3, my: -28 };
 const SEASON_TIERS = 30, SEASON_XP = 250, SEASON_PRICE = 500;
 
 const UP_CHANCE = [1, 1, 1, 1, 1, 1, .8, .65, .5, .35];   // szansa na ulepszenie z +N na +N+1
@@ -1265,6 +1267,10 @@ function heroSVG(eq, fx = true) {
     s += `<ellipse cx="60" cy="149" rx="32" ry="5" fill="rgba(0,0,0,.35)"/>`;
     if (full) s += `<g transform="translate(0 -6)">${wingSVG()}</g>`;
     s += `<image href="${HERO.img}" x="18.75" y="-2" width="82.5" height="150"/>`;
+    // przedmioty dorysowane na zdjęcie
+    if (eq.armor) s += `<g transform="translate(${HF.ax} ${HF.ay}) scale(${HF.asx} ${HF.asy})" opacity=".96">${torsoSVG(eq.armor)}</g>`;
+    if (eq.amulet) s += `<g transform="translate(${HF.mx} ${HF.my})">${amuletSVG(eq.amulet)}</g>`;
+    if (eq.helmet) s += `<g transform="translate(${HF.hx} ${HF.hy}) scale(${HF.hs})">${helmetSVG(eq.helmet, fx)}</g>`;
     s += `<g class="warm" style="transform-origin:91px 129px"><g transform="translate(91 129) rotate(25)">${w ? weaponSVG(w, fx) : ''}</g></g>`;
     return s + '</svg>';
   }
